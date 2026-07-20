@@ -1,24 +1,39 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import 'screens/home_screen.dart';
-import 'theme/app_theme.dart';
+import 'app.dart';
+import 'core/config/env.dart';
+import 'core/config/firebase_config.dart';
+import 'core/services/biometric_service.dart';
+import 'core/services/emergency_card_store.dart';
+import 'core/services/secure_storage_service.dart';
+import 'core/services/theme_mode_store.dart';
+import 'features/auth/data/auth_repository.dart';
+import 'features/auth/data/user_repository.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Configuration lives in the untracked .env (see .env.example).
+  await Env.load();
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MediCarry',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
-      home: const HomeScreen(),
-    );
-  }
+  await Firebase.initializeApp(options: FirebaseConfig.currentPlatform);
+
+  // Offline-first: cache Firestore reads locally so records resolve with no
+  // connectivity (enabled by default on mobile; set explicitly for clarity).
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+  );
+
+  runApp(
+    MediCarryApp(
+      authRepository: AuthRepository(),
+      userRepository: UserRepository(),
+      secureStorage: SecureStorageService(),
+      biometricService: BiometricService(),
+      emergencyCardStore: EmergencyCardStore(),
+      themeModeStore: ThemeModeStore(),
+    ),
+  );
 }
