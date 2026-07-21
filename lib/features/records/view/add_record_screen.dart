@@ -3,11 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 
-/// Add Record — the centre nav button's destination.
-///
-/// Placeholder: no Figma frame exists and the records feature has no write
-/// path yet. It lists the record types the flow will support so the button is
-/// not a silent no-op, and is explicit that nothing can be saved yet.
 class AddRecordScreen extends StatelessWidget {
   const AddRecordScreen({super.key});
 
