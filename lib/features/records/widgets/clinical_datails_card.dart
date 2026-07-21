@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 
-/// "Clinical Details" white card from the Record Details (Final) design.
+/// "Clinical Details" .
 class ClinicalDetailsCard extends StatelessWidget {
   const ClinicalDetailsCard({
     super.key,
