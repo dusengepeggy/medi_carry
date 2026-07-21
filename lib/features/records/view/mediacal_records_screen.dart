@@ -87,7 +87,8 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
     return _records.where((r) {
       final category = _filterCategories[_selectedFilter];
       final matchesFilter = category == null || r.category == category;
-      final matchesQuery = query.isEmpty ||
+      final matchesQuery =
+          query.isEmpty ||
           r.title.toLowerCase().contains(query) ||
           r.subtitle.toLowerCase().contains(query);
       return matchesFilter && matchesQuery;
@@ -109,7 +110,9 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = context.select((AuthBloc b) => b.state.user.displayName);
+    final displayName = context.select(
+      (AuthBloc b) => b.state.user.displayName,
+    );
     final records = _visibleRecords;
 
     return Scaffold(
