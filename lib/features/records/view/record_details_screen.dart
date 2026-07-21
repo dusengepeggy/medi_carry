@@ -9,11 +9,6 @@ import '../widgets/attachments_section.dart';
 import '../widgets/clinical_details_card.dart';
 import '../widgets/doctor_notes_card.dart';
 
-/// Record Details — an implementation of the "Record Details (Final)" Figma
-/// frame (node 2:406).
-///
-/// The record shown is the design's sample content until the records feature
-/// supplies real data.
 class RecordDetailsScreen extends StatelessWidget {
   const RecordDetailsScreen({super.key});
 
