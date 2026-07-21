@@ -14,12 +14,6 @@ import '../widgets/record_filter_chips.dart';
 import '../widgets/records_app_bar.dart';
 import '../widgets/records_search_field.dart';
 
-/// Medical Records — an implementation of the "Medical Records (Final)" Figma
-/// frame (node 2:274).
-///
-/// The records are the design's sample content until the records feature is
-/// built; search and filtering already operate on that list so the controls
-/// behave rather than merely appear.
 class MedicalRecordsScreen extends StatefulWidget {
   const MedicalRecordsScreen({super.key});
 
@@ -28,7 +22,6 @@ class MedicalRecordsScreen extends StatefulWidget {
 }
 
 class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
-  /// Consecutive cards overlap to form the design's stacked deck.
   static const _overlap = 16.0;
 
   static const _filters = ['All', 'Diagnoses', 'Medications', 'Labs'];
@@ -37,7 +30,7 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
   String _selectedFilter = 'All';
   String _query = '';
 
-  /// Placeholder records, mirroring the design's samples.
+  /// Placeholder records
   static const _records = [
     RecordEntry(
       category: 'LAB RESULT',
@@ -75,7 +68,6 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
     super.dispose();
   }
 
-  /// Category each filter maps to, so the chips actually filter.
   static const _filterCategories = {
     'Diagnoses': 'DIAGNOSIS',
     'Medications': 'MEDICATION',
@@ -228,7 +220,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-/// Not in the design, but the filters and search can empty the list.
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
