@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../bloc/auth/auth_bloc.dart';
 import 'sign_up_flow.dart';
 
@@ -71,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 'Secure Health Portfolio Access',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: AppColors.textSecondary),
+                    ?.copyWith(color: context.colors.textSecondary),
               ),
               const SizedBox(height: 32),
               Form(
@@ -224,7 +225,7 @@ class _FieldLabel extends StatelessWidget {
       style: Theme.of(context)
           .textTheme
           .labelMedium
-          ?.copyWith(color: AppColors.textSecondary),
+          ?.copyWith(color: context.colors.textSecondary),
     );
   }
 }

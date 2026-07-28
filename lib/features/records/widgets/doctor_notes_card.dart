@@ -5,9 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 
-/// "Doctor's Notes"
+/// "Doctor's Notes" navy card from the Record Details (Final) design.
 class DoctorNotesCard extends StatelessWidget {
-  const DoctorNotesCard({super.key, required this.notes, this.isSigned = true});
+  const DoctorNotesCard({
+    super.key,
+    required this.notes,
+    this.isSigned = true,
+  });
 
   final String notes;
   final bool isSigned;
@@ -31,7 +35,7 @@ class DoctorNotesCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Decorative quarter-round
+            // Decorative quarter-round bleeding off the top-right corner.
             Positioned(
               top: -40,
               right: -40,

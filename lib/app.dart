@@ -12,6 +12,8 @@ import 'features/auth/bloc/auth/auth_bloc.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/data/user_repository.dart';
 import 'features/auth/view/auth_gate.dart';
+import 'features/records/data/records_repository.dart';
+import 'features/share/data/shares_repository.dart';
 
 /// Root widget. Repositories/services are injected so tests can supply fakes
 /// without touching Firebase; `main.dart` supplies the real implementations.
@@ -24,6 +26,8 @@ class MediCarryApp extends StatelessWidget {
     required this.biometricService,
     required this.emergencyCardStore,
     required this.themeModeStore,
+    required this.recordsRepository,
+    required this.sharesRepository,
   });
 
   final AuthRepository authRepository;
@@ -32,6 +36,8 @@ class MediCarryApp extends StatelessWidget {
   final BiometricService biometricService;
   final EmergencyCardStore emergencyCardStore;
   final ThemeModeStore themeModeStore;
+  final RecordsRepository recordsRepository;
+  final SharesRepository sharesRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +49,14 @@ class MediCarryApp extends StatelessWidget {
         RepositoryProvider.value(value: biometricService),
         RepositoryProvider.value(value: emergencyCardStore),
         RepositoryProvider.value(value: themeModeStore),
+        RepositoryProvider.value(value: recordsRepository),
+        RepositoryProvider.value(value: sharesRepository),
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => AuthBloc(authRepository: authRepository)),
+          BlocProvider(
+            create: (_) => AuthBloc(authRepository: authRepository),
+          ),
           BlocProvider(
             create: (_) => ThemeCubit(store: themeModeStore)..load(),
           ),

@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// A tappable settings row from the User Profile design: tinted icon chip,
 /// title + description, and a chevron.
@@ -31,14 +31,14 @@ class ProfileOptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Ink(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -80,7 +80,7 @@ class ProfileOptionCard extends StatelessWidget {
                           fontSize: 16,
                           height: 24 / 16,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.ink,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       Text(
@@ -91,7 +91,7 @@ class ProfileOptionCard extends StatelessWidget {
                           fontSize: 11,
                           height: 14 / 11,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                         ),
                       ),
                     ],

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// The Edit Profile form appears on light cards and on the dark Emergency
 /// Contact card, which flips the label, fill and text colours.
@@ -40,7 +41,7 @@ class EditFieldShell extends StatelessWidget {
             fontSize: 11,
             height: 14 / 11,
             fontWeight: FontWeight.w500,
-            color: _isDark ? AppColors.labelOnDark : AppColors.textSecondary,
+            color: _isDark ? AppColors.labelOnDark : context.colors.textSecondary,
           ),
         ),
         const SizedBox(height: 4),
@@ -52,7 +53,7 @@ class EditFieldShell extends StatelessWidget {
           decoration: BoxDecoration(
             color: _isDark
                 ? Colors.white.withValues(alpha: 0.1)
-                : AppColors.inputFill,
+                : context.colors.surfaceMuted,
             borderRadius: BorderRadius.circular(16),
             border: _isDark
                 ? Border.all(color: Colors.white.withValues(alpha: 0.05))
@@ -195,7 +196,11 @@ class EditDateField extends StatelessWidget {
                 ),
               ),
             ),
-            SvgPicture.asset(AppAssets.dropdownChevron, width: 20, height: 20),
+            SvgPicture.asset(
+              AppAssets.dropdownChevron,
+              width: 20,
+              height: 20,
+            ),
           ],
         ),
       ),

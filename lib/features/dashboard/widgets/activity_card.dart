@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// One row of the recent-activity list.
 class ActivityEntry {
@@ -34,11 +35,15 @@ class ActivityCard extends StatelessWidget {
   const ActivityCard({
     super.key,
     required this.entries,
+    this.emptyText = 'No recent activity.',
     this.onSeeAll,
     this.onEntryTap,
   });
 
   final List<ActivityEntry> entries;
+
+  /// Shown in place of the list when [entries] is empty.
+  final String emptyText;
   final VoidCallback? onSeeAll;
   final void Function(ActivityEntry entry)? onEntryTap;
 
@@ -48,7 +53,7 @@ class ActivityCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
@@ -72,7 +77,7 @@ class ActivityCard extends StatelessWidget {
                     fontSize: 20,
                     height: 30 / 20,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.navy,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 GestureDetector(
@@ -92,13 +97,26 @@ class ActivityCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          for (var i = 0; i < entries.length; i++) ...[
-            if (i > 0) const SizedBox(height: 4),
-            _ActivityRow(
-              entry: entries[i],
-              onTap: onEntryTap == null ? null : () => onEntryTap!(entries[i]),
-            ),
-          ],
+          if (entries.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              child: Text(
+                emptyText,
+                style: GoogleFonts.hankenGrotesk(
+                  fontSize: 15,
+                  color: context.colors.textSecondary,
+                ),
+              ),
+            )
+          else
+            for (var i = 0; i < entries.length; i++) ...[
+              if (i > 0) const SizedBox(height: 4),
+              _ActivityRow(
+                entry: entries[i],
+                onTap:
+                    onEntryTap == null ? null : () => onEntryTap!(entries[i]),
+              ),
+            ],
         ],
       ),
     );
@@ -126,7 +144,7 @@ class _ActivityRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: entry.highlighted
                     ? AppColors.limeFinal.withValues(alpha: 0.2)
-                    : AppColors.indigoSurface,
+                    : context.colors.surfaceMuted,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -148,7 +166,7 @@ class _ActivityRow extends StatelessWidget {
                       fontSize: 16,
                       height: 24 / 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.navy,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -157,7 +175,7 @@ class _ActivityRow extends StatelessWidget {
                     style: GoogleFonts.hankenGrotesk(
                       fontSize: 16,
                       height: 24 / 16,
-                      color: AppColors.navy.withValues(alpha: 0.6),
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ],

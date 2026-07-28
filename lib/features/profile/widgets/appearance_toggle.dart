@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/theme_cubit.dart';
 
 /// Appearance preference: System / Light / Dark.
@@ -28,10 +29,9 @@ class AppearanceToggle extends StatelessWidget {
 
     final cardColor = isDark ? AppColors.surfaceDark : Colors.white;
     final titleColor = isDark ? AppColors.textOnDark : AppColors.ink;
-    final subtitleColor = isDark
-        ? AppColors.textMutedDark
-        : AppColors.textSecondary;
-    final trackColor = isDark ? AppColors.backgroundDark : AppColors.inputFill;
+    final subtitleColor =
+        isDark ? AppColors.textMutedDark : context.colors.textSecondary;
+    final trackColor = isDark ? AppColors.backgroundDark : context.colors.surfaceMuted;
 
     return Container(
       width: double.infinity,
@@ -86,7 +86,8 @@ class AppearanceToggle extends StatelessWidget {
                       icon: icon,
                       isSelected: mode == selected,
                       isDark: isDark,
-                      onTap: () => context.read<ThemeCubit>().setMode(mode),
+                      onTap: () =>
+                          context.read<ThemeCubit>().setMode(mode),
                     ),
                   ),
               ],
@@ -117,7 +118,7 @@ class _Segment extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedBg = isDark ? AppColors.limeFinal : AppColors.navy;
     final selectedFg = isDark ? AppColors.limeOnSurface : Colors.white;
-    final idleFg = isDark ? AppColors.textMutedDark : AppColors.textGray;
+    final idleFg = isDark ? AppColors.textMutedDark : context.colors.textSecondary;
 
     return Semantics(
       button: true,
@@ -137,7 +138,11 @@ class _Segment extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: isSelected ? selectedFg : idleFg),
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? selectedFg : idleFg,
+              ),
               const SizedBox(height: 4),
               Text(
                 label,

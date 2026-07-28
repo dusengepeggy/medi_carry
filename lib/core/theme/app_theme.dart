@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
+import 'app_semantic_colors.dart';
 
 /// MediCarry application theme.
 ///
 /// Exposes a [light] and [dark] [ThemeData], both Material 3, built from the
-/// brand tokens in [AppColors]. Headings use Manrope; body and labels use
-/// Inter (loaded at runtime via `google_fonts`).
+/// brand tokens in [AppColors]. Typography is Hanken Grotesk throughout —
+/// the family used by the MediCarry designs — loaded at runtime via
+/// `google_fonts`.
 abstract final class AppTheme {
   AppTheme._();
 
@@ -70,63 +72,66 @@ abstract final class AppTheme {
   // ---- Builder ------------------------------------------------------------
   static ThemeData _build(ColorScheme scheme, Brightness brightness) {
     final bool isDark = brightness == Brightness.dark;
-    final Color scaffoldBg =
-        isDark ? AppColors.backgroundDark : AppColors.background;
+    final AppSemanticColors semantic =
+        isDark ? AppSemanticColors.dark : AppSemanticColors.light;
+    final Color scaffoldBg = semantic.canvas;
 
-    // Inter for body/labels, Manrope for display/headline/title.
-    final TextTheme base = GoogleFonts.interTextTheme(
+    // Hanken Grotesk throughout — the typeface used by the MediCarry
+    // "(Final)" designs. Weight carries the hierarchy rather than a second
+    // family.
+    final TextTheme base = GoogleFonts.hankenGroteskTextTheme(
       ThemeData(brightness: brightness).textTheme,
     );
     final TextTheme textTheme = base.copyWith(
-      displayLarge: GoogleFonts.manrope(
+      displayLarge: GoogleFonts.hankenGrotesk(
         textStyle: base.displayLarge,
         fontWeight: FontWeight.w700,
         letterSpacing: -1.5,
         color: scheme.onSurface,
       ),
-      displayMedium: GoogleFonts.manrope(
+      displayMedium: GoogleFonts.hankenGrotesk(
         textStyle: base.displayMedium,
         fontWeight: FontWeight.w700,
         letterSpacing: -1.0,
         color: scheme.onSurface,
       ),
-      displaySmall: GoogleFonts.manrope(
+      displaySmall: GoogleFonts.hankenGrotesk(
         textStyle: base.displaySmall,
         fontWeight: FontWeight.w700,
         color: scheme.onSurface,
       ),
-      headlineLarge: GoogleFonts.manrope(
+      headlineLarge: GoogleFonts.hankenGrotesk(
         textStyle: base.headlineLarge,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
         color: scheme.onSurface,
       ),
-      headlineMedium: GoogleFonts.manrope(
+      headlineMedium: GoogleFonts.hankenGrotesk(
         textStyle: base.headlineMedium,
         fontWeight: FontWeight.w700,
         color: scheme.onSurface,
       ),
-      headlineSmall: GoogleFonts.manrope(
+      headlineSmall: GoogleFonts.hankenGrotesk(
         textStyle: base.headlineSmall,
         fontWeight: FontWeight.w600,
         color: scheme.onSurface,
       ),
-      titleLarge: GoogleFonts.manrope(
+      titleLarge: GoogleFonts.hankenGrotesk(
         textStyle: base.titleLarge,
         fontWeight: FontWeight.w600,
         color: scheme.onSurface,
       ),
-      titleMedium: GoogleFonts.manrope(
+      titleMedium: GoogleFonts.hankenGrotesk(
         textStyle: base.titleMedium,
         fontWeight: FontWeight.w600,
         color: scheme.onSurface,
       ),
-      labelLarge: GoogleFonts.inter(
+      labelLarge: GoogleFonts.hankenGrotesk(
         textStyle: base.labelLarge,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.6,
       ),
-      labelMedium: GoogleFonts.inter(
+      labelMedium: GoogleFonts.hankenGrotesk(
         textStyle: base.labelMedium,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.6,
@@ -138,6 +143,7 @@ abstract final class AppTheme {
       colorScheme: scheme,
       brightness: brightness,
       scaffoldBackgroundColor: scaffoldBg,
+      extensions: [semantic],
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: scaffoldBg,
@@ -145,7 +151,7 @@ abstract final class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.manrope(
+        titleTextStyle: GoogleFonts.hankenGrotesk(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: scheme.onSurface,
@@ -161,7 +167,7 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(_radius),
           ),
-          textStyle: GoogleFonts.manrope(
+          textStyle: GoogleFonts.hankenGrotesk(
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -175,7 +181,7 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(_radius),
           ),
-          textStyle: GoogleFonts.manrope(
+          textStyle: GoogleFonts.hankenGrotesk(
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -184,7 +190,7 @@ abstract final class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: scheme.tertiary,
-          textStyle: GoogleFonts.inter(
+          textStyle: GoogleFonts.hankenGrotesk(
             fontWeight: FontWeight.w700,
             letterSpacing: 0.6,
           ),
@@ -202,11 +208,11 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isDark ? AppColors.fillDark : AppColors.fill,
-        hintStyle: GoogleFonts.inter(
+        hintStyle: GoogleFonts.hankenGrotesk(
           color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
           fontSize: 14,
         ),
-        labelStyle: GoogleFonts.inter(
+        labelStyle: GoogleFonts.hankenGrotesk(
           color: scheme.onSurfaceVariant,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.6,
@@ -232,7 +238,7 @@ abstract final class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: scheme.secondary,
-        labelStyle: GoogleFonts.inter(
+        labelStyle: GoogleFonts.hankenGrotesk(
           color: scheme.onSecondary,
           fontWeight: FontWeight.w600,
         ),

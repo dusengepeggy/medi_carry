@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../auth/data/user_repository.dart';
 import '../../auth/models/patient_profile.dart';
 import '../widgets/edit_profile_fields.dart';
@@ -44,15 +45,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     final p = widget.profile;
     _nameController = TextEditingController(text: p.fullName);
-    _contactNameController = TextEditingController(
-      text: p.emergencyContactName ?? '',
-    );
-    _contactPhoneController = TextEditingController(
-      text: p.emergencyContactPhone ?? '',
-    );
-    _dateOfBirth = p.dateOfBirth == null
-        ? null
-        : DateTime.tryParse(p.dateOfBirth!);
+    _contactNameController =
+        TextEditingController(text: p.emergencyContactName ?? '');
+    _contactPhoneController =
+        TextEditingController(text: p.emergencyContactPhone ?? '');
+    _dateOfBirth = p.dateOfBirth == null ? null : DateTime.tryParse(p.dateOfBirth!);
     _bloodType = _bloodTypes.contains(p.bloodType) ? p.bloodType : null;
     _gender = _genders.contains(p.gender) ? p.gender : null;
   }
@@ -107,10 +104,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      _showMessage(
-        'Could not save your profile. Please try again.',
-        isError: true,
-      );
+      _showMessage('Could not save your profile. Please try again.',
+          isError: true);
     }
   }
 
@@ -150,7 +145,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -258,7 +253,7 @@ class _EditAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.background,
+      color: context.colors.canvas,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -287,7 +282,7 @@ class _EditAppBar extends StatelessWidget {
                       fontSize: 18,
                       height: 24 / 18,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.ink,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ),
@@ -310,9 +305,8 @@ class _EditAppBar extends StatelessWidget {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(
-                        AppColors.saveButtonText,
-                      ),
+                      valueColor:
+                          AlwaysStoppedAnimation(AppColors.saveButtonText),
                     ),
                   )
                 : Text(
@@ -413,7 +407,7 @@ class _PictureSection extends StatelessWidget {
             fontSize: 18,
             height: 24 / 18,
             fontWeight: FontWeight.w600,
-            color: AppColors.ink,
+            color: context.colors.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
@@ -424,7 +418,7 @@ class _PictureSection extends StatelessWidget {
             fontSize: 11,
             height: 14 / 11,
             fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
           ),
         ),
       ],
@@ -444,7 +438,7 @@ class _FormCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -481,7 +475,7 @@ class _EmergencyContactCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.ink,
+        color: AppColors.navy,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -554,7 +548,9 @@ class _DeleteAccountButton extends StatelessWidget {
       // Account deletion needs a re-authentication flow and a cascading
       // records wipe; not implemented yet, so say so rather than pretend.
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account deletion is not available yet.')),
+        const SnackBar(
+          content: Text('Account deletion is not available yet.'),
+        ),
       );
     }
   }

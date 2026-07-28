@@ -5,44 +5,22 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../app/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
-import '../widgets/attachments_section.dart';
+import '../../../core/theme/app_semantic_colors.dart';
+import '../models/medical_record.dart';
 import '../widgets/clinical_details_card.dart';
 import '../widgets/doctor_notes_card.dart';
 
+/// Record Details — an implementation of the "Record Details (Final)" Figma
+/// frame (node 2:406), populated from a real [MedicalRecord].
 class RecordDetailsScreen extends StatelessWidget {
-  const RecordDetailsScreen({super.key});
+  const RecordDetailsScreen({super.key, required this.record});
 
-  static const _attachments = [
-    Attachment(
-      name: 'Lab_Results_Pg1.pdf',
-      size: '1.2 MB',
-      preview: AppAssets.attachment1,
-    ),
-    Attachment(
-      name: 'Imaging_Scan.jpg',
-      size: '4.5 MB',
-      preview: AppAssets.attachment2,
-    ),
-  ];
-
-  static const _resultSummary =
-      'Most metabolic markers are within normal reference ranges. However, '
-      'fasting blood glucose is mildly elevated (108 mg/dL). Calcium levels '
-      'are optimal. Recommend lifestyle modifications and a follow-up test in '
-      '3 months.';
-
-  static const _notes =
-      '"Patient presents with mild fatigue over the last 3 weeks. Routine CMP '
-      'ordered to rule out metabolic imbalances. Results indicate pre-diabetic '
-      'glucose levels. We discussed dietary adjustments, specifically reducing '
-      'processed carbohydrates, and integrating light daily exercise. Patient '
-      'was receptive. Will monitor and re-test fasting glucose at next '
-      'quarterly visit."';
+  final MedicalRecord record;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       extendBody: true,
       body: SafeArea(
         bottom: false,
@@ -59,26 +37,28 @@ class RecordDetailsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
-                    const _ContextualHeader(
-                      title: 'Comprehensive Metabolic Panel',
-                      status: 'REVIEW REQUIRED',
-                      date: 'Oct 24, 2023 • 08:15 AM',
-                      place: 'Nairobi Central Clinic',
+                    _ContextualHeader(
+                      title: record.title,
+                      status: record.category.label,
+                      date: record.formattedDate,
+                      place: record.provider.isEmpty
+                          ? 'No facility recorded'
+                          : record.provider,
                     ),
                     const SizedBox(height: 16),
-                    const ClinicalDetailsCard(
-                      physician: 'Dr. Amina Ochieng',
-                      speciality: 'Endocrinology',
-                      patientId: 'MC-8492-771',
-                      resultSummary: _resultSummary,
+                    ClinicalDetailsCard(
+                      physician: record.provider.isEmpty
+                          ? '—'
+                          : record.provider,
+                      speciality: record.category.title,
+                      resultSummary: record.detail.isEmpty
+                          ? 'No summary recorded.'
+                          : record.detail,
                     ),
-                    const SizedBox(height: 24),
-                    AttachmentsSection(
-                      attachments: _attachments,
-                      onOpen: (_) {},
-                    ),
-                    const SizedBox(height: 32),
-                    const DoctorNotesCard(notes: _notes),
+                    if (record.notes.trim().isNotEmpty) ...[
+                      const SizedBox(height: 32),
+                      DoctorNotesCard(notes: record.notes),
+                    ],
                     const SizedBox(height: 24),
                     _ActionButtons(
                       onShare: () => AppNav.openShare(context),
@@ -122,7 +102,7 @@ class _DetailAppBar extends StatelessWidget {
               fontSize: 18,
               height: 27 / 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.navy,
+              color: context.colors.textPrimary,
             ),
           ),
           _CircleButton(
@@ -153,7 +133,7 @@ class _CircleButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.colors.surface,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -193,7 +173,7 @@ class _ContextualHeader extends StatelessWidget {
             fontSize: 28,
             height: 35 / 28,
             fontWeight: FontWeight.w700,
-            color: AppColors.navy,
+            color: context.colors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -229,17 +209,9 @@ class _ContextualHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        _MetaRow(
-          icon: AppAssets.detailMetaDate,
-          label: date,
-          size: const Size(12, 13.333),
-        ),
+        _MetaRow(icon: AppAssets.detailMetaDate, label: date, size: const Size(12, 13.333)),
         const SizedBox(height: 3.5),
-        _MetaRow(
-          icon: AppAssets.detailMetaPlace,
-          label: place,
-          size: const Size(12, 12),
-        ),
+        _MetaRow(icon: AppAssets.detailMetaPlace, label: place, size: const Size(12, 12)),
       ],
     );
   }
@@ -266,7 +238,7 @@ class _MetaRow extends StatelessWidget {
             style: GoogleFonts.hankenGrotesk(
               fontSize: 14,
               height: 21 / 14,
-              color: AppColors.navy.withValues(alpha: 0.7),
+              color: context.colors.textSecondary,
             ),
           ),
         ),
@@ -328,7 +300,7 @@ class _ActionButtons extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 17),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
-                side: const BorderSide(color: AppColors.hairline),
+                side: BorderSide(color: context.colors.border),
               ),
             ),
             child: Row(
@@ -346,7 +318,7 @@ class _ActionButtons extends StatelessWidget {
                     fontSize: 15,
                     height: 22.5 / 15,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.navy,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ],

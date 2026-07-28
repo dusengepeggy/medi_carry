@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 
+/// Horizontally scrolling category filters from the Medical Records (Final)
+/// design. The design shows "All" selected and the row scrolling past "Labs".
 class RecordFilterChips extends StatelessWidget {
   const RecordFilterChips({
     super.key,
@@ -39,7 +41,11 @@ class RecordFilterChips extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.isSelected, this.onTap});
+  const _Chip({
+    required this.label,
+    required this.isSelected,
+    this.onTap,
+  });
 
   final String label;
   final bool isSelected;

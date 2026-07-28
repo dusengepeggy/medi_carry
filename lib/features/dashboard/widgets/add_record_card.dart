@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// "Add New Record" quick-action card from the Dashboard (Final) design.
 class AddRecordCard extends StatelessWidget {
@@ -20,7 +21,7 @@ class AddRecordCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: AppColors.indigoSurface,
+          color: context.colors.surfaceMuted,
           borderRadius: BorderRadius.circular(32),
         ),
         child: Column(
@@ -55,7 +56,7 @@ class AddRecordCard extends StatelessWidget {
                 fontSize: 20,
                 height: 28 / 20,
                 fontWeight: FontWeight.w700,
-                color: AppColors.navy,
+                color: context.colors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -67,7 +68,7 @@ class AddRecordCard extends StatelessWidget {
                 style: GoogleFonts.hankenGrotesk(
                   fontSize: 16,
                   height: 24 / 16,
-                  color: AppColors.navy.withValues(alpha: 0.7),
+                  color: context.colors.textSecondary,
                 ),
               ),
             ),
