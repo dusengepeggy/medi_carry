@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// Translucent top app bar from the Share Records (Final) design: avatar,
 /// greeting, and a notifications action.
@@ -54,8 +54,8 @@ class ShareAppBar extends StatelessWidget {
                               child: Container(
                                 width: 40,
                                 height: 40,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.borderGray,
+                                decoration: BoxDecoration(
+                                  color: context.colors.border,
                                   shape: BoxShape.circle,
                                 ),
                                 child: ClipOval(
@@ -84,7 +84,7 @@ class ShareAppBar extends StatelessWidget {
                                     style: GoogleFonts.hankenGrotesk(
                                       fontSize: 14,
                                       height: 17.5 / 14,
-                                      color: AppColors.textGray,
+                                      color: context.colors.textSecondary,
                                     ),
                                   ),
                                   Text(
@@ -95,7 +95,7 @@ class ShareAppBar extends StatelessWidget {
                                       fontSize: 18,
                                       height: 22.5 / 18,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.navy,
+                                      color: context.colors.textPrimary,
                                     ),
                                   ),
                                 ],

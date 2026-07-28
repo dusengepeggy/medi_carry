@@ -10,8 +10,11 @@ import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/data/user_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:medi_carry/features/auth/models/patient_profile.dart';
 import 'package:medi_carry/features/cards/view/cards_screen.dart';
+import 'package:medi_carry/features/records/data/records_repository.dart';
+import 'package:medi_carry/features/share/data/shares_repository.dart';
 import 'package:medi_carry/features/dashboard/view/home_screen.dart';
 import 'package:medi_carry/features/profile/view/profile_screen.dart';
 import 'package:medi_carry/features/records/view/medical_records_screen.dart';
@@ -61,6 +64,10 @@ void main() {
           RepositoryProvider<UserRepository>.value(value: userRepository),
           RepositoryProvider<EmergencyCardStore>.value(
               value: emergencyCardStore),
+          RepositoryProvider<RecordsRepository>.value(
+              value: RecordsRepository(firestore: FakeFirebaseFirestore())),
+          RepositoryProvider<SharesRepository>.value(
+              value: SharesRepository(firestore: FakeFirebaseFirestore())),
         ],
         child: MultiBlocProvider(
           providers: [

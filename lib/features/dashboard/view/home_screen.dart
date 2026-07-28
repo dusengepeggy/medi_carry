@@ -5,9 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../../app/app_routes.dart';
 import '../../../app/app_shell.dart';
 import '../../auth/bloc/auth/auth_bloc.dart';
+import '../../records/bloc/records_cubit.dart';
+import '../../records/data/records_repository.dart';
+import '../../records/models/medical_record.dart';
 import '../widgets/activity_card.dart';
 import '../widgets/add_record_card.dart';
 import '../widgets/dashboard_app_bar.dart';
@@ -18,41 +22,36 @@ import '../widgets/vitals_card.dart';
 /// The MediCarry dashboard — an implementation of the "Dashboard (Final)"
 /// Figma frame (node 2:2).
 ///
-/// The medication, vitals and activity content is placeholder data matching the
-/// design; it will be replaced by the records feature once that lands. The
-/// greeting is already wired to the signed-in patient.
+/// The Activity list is the patient's real recent records (via [RecordsCubit]).
+/// The medication and vitals hero cards remain illustrative summaries until
+/// those specific features land.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  /// Placeholder activity, mirroring the design's sample rows.
-  static const _activity = [
-    ActivityEntry(
-      title: 'Comprehensive Metabolic Panel',
-      subtitle: 'Oct 12 • City Lab',
-      icon: AppAssets.activityLab,
-      iconSize: Size(18.057, 18),
-    ),
-    ActivityEntry(
-      title: 'Prescription Renewal',
-      subtitle: 'Oct 10 • Dr. Smith',
-      icon: AppAssets.activityPrescription,
-      iconSize: Size(20, 22),
-    ),
-    ActivityEntry(
-      title: 'General Checkup',
-      subtitle: 'Sep 28 • Main Clinic',
-      icon: AppAssets.activityCheckup,
-      iconSize: Size(20, 20),
-      highlighted: true,
-    ),
-  ];
+  @override
+  Widget build(BuildContext context) {
+    final uid = context.select((AuthBloc b) => b.state.user.uid);
+    return BlocProvider(
+      // Keyed on uid so the cubit is recreated once auth resolves the user.
+      key: ValueKey(uid),
+      create: (_) => RecordsCubit(
+        repository: context.read<RecordsRepository>(),
+        uid: uid,
+      ),
+      child: const _DashboardView(),
+    );
+  }
+}
+
+class _DashboardView extends StatelessWidget {
+  const _DashboardView();
 
   @override
   Widget build(BuildContext context) {
     final displayName = context.select((AuthBloc b) => b.state.user.displayName);
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       extendBody: true,
       body: Column(
         children: [
@@ -86,11 +85,7 @@ class HomeScreen extends StatelessWidget {
                     trendLabel: 'Slightly lower than yesterday',
                   ),
                   const SizedBox(height: 16),
-                  ActivityCard(
-                    entries: _activity,
-                    onSeeAll: () => _openRecords(context),
-                    onEntryTap: (_) => AppNav.openRecordDetails(context),
-                  ),
+                  _RecentActivity(),
                   const SizedBox(height: 16),
                   AddRecordCard(onTap: () => AppNav.openAddRecord(context)),
                 ],
@@ -102,11 +97,40 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _openRecords(BuildContext context) =>
-      AppShell.of(context)?.goToTab(MediTab.history);
-
   void _openProfile(BuildContext context) =>
       AppShell.of(context)?.goToTab(MediTab.profile);
+}
+
+/// The Activity card, driven by the three most recent real records.
+class _RecentActivity extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<RecordsCubit, RecordsState>(
+      builder: (context, state) {
+        final recent = state.records.take(3).toList();
+        final entries = [
+          for (final r in recent)
+            ActivityEntry(
+              title: r.title,
+              subtitle: '${r.formattedDate} • ${r.category.title}',
+              icon: r.category.icon,
+              highlighted: r.category == RecordCategory.labResult,
+            ),
+        ];
+        return ActivityCard(
+          entries: entries,
+          emptyText: state.status == RecordsStatus.loading
+              ? 'Loading…'
+              : 'No records yet.',
+          onSeeAll: () => AppShell.of(context)?.goToTab(MediTab.history),
+          onEntryTap: (entry) {
+            final i = entries.indexOf(entry);
+            if (i >= 0) AppNav.openRecordDetails(context, recent[i]);
+          },
+        );
+      },
+    );
+  }
 }
 
 class _Welcome extends StatelessWidget {
@@ -141,7 +165,7 @@ class _Welcome extends StatelessWidget {
             height: 42 / 28,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.7,
-            color: AppColors.navy,
+            color: context.colors.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
@@ -150,7 +174,7 @@ class _Welcome extends StatelessWidget {
           style: GoogleFonts.hankenGrotesk(
             fontSize: 16,
             height: 24 / 16,
-            color: AppColors.navy.withValues(alpha: 0.7),
+            color: context.colors.textSecondary,
           ),
         ),
         const SizedBox(height: 24),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
+import 'app_semantic_colors.dart';
 
 /// MediCarry application theme.
 ///
@@ -71,8 +72,9 @@ abstract final class AppTheme {
   // ---- Builder ------------------------------------------------------------
   static ThemeData _build(ColorScheme scheme, Brightness brightness) {
     final bool isDark = brightness == Brightness.dark;
-    final Color scaffoldBg =
-        isDark ? AppColors.backgroundDark : AppColors.background;
+    final AppSemanticColors semantic =
+        isDark ? AppSemanticColors.dark : AppSemanticColors.light;
+    final Color scaffoldBg = semantic.canvas;
 
     // Hanken Grotesk throughout — the typeface used by the MediCarry
     // "(Final)" designs. Weight carries the hierarchy rather than a second
@@ -141,6 +143,7 @@ abstract final class AppTheme {
       colorScheme: scheme,
       brightness: brightness,
       scaffoldBackgroundColor: scaffoldBg,
+      extensions: [semantic],
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: scaffoldBg,

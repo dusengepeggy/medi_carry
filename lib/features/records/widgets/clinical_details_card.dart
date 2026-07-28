@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// "Clinical Details" white card from the Record Details (Final) design.
 class ClinicalDetailsCard extends StatelessWidget {
@@ -11,13 +11,15 @@ class ClinicalDetailsCard extends StatelessWidget {
     super.key,
     required this.physician,
     required this.speciality,
-    required this.patientId,
+    this.patientId,
     required this.resultSummary,
   });
 
   final String physician;
   final String speciality;
-  final String patientId;
+
+  /// Optional — hidden when null (a generic record has no patient-ID field).
+  final String? patientId;
   final String resultSummary;
 
   @override
@@ -26,7 +28,7 @@ class ClinicalDetailsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
@@ -44,8 +46,8 @@ class ClinicalDetailsCard extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(
-                  color: AppColors.indigoSurface,
+                decoration: BoxDecoration(
+                  color: context.colors.surfaceMuted,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -63,7 +65,7 @@ class ClinicalDetailsCard extends StatelessWidget {
                   fontSize: 16,
                   height: 24 / 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.navy,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ],
@@ -77,7 +79,7 @@ class ClinicalDetailsCard extends StatelessWidget {
               fontSize: 18,
               height: 27 / 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.navy,
+              color: context.colors.textPrimary,
             ),
           ),
           Text(
@@ -85,28 +87,30 @@ class ClinicalDetailsCard extends StatelessWidget {
             style: GoogleFonts.hankenGrotesk(
               fontSize: 14,
               height: 21 / 14,
-              color: AppColors.navy.withValues(alpha: 0.7),
+              color: context.colors.textSecondary,
             ),
           ),
-          const SizedBox(height: 24),
-          const _FieldLabel('PATIENT ID'),
-          const SizedBox(height: 4),
-          Text(
-            patientId,
-            style: GoogleFonts.hankenGrotesk(
-              fontSize: 18,
-              height: 27 / 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.navy,
+          if (patientId != null) ...[
+            const SizedBox(height: 24),
+            const _FieldLabel('PATIENT ID'),
+            const SizedBox(height: 4),
+            Text(
+              patientId!,
+              style: GoogleFonts.hankenGrotesk(
+                fontSize: 18,
+                height: 27 / 18,
+                fontWeight: FontWeight.w700,
+                color: context.colors.textPrimary,
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 24),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(top: 17),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: AppColors.hairline),
+                top: BorderSide(color: context.colors.border),
               ),
             ),
             child: Column(
@@ -119,7 +123,7 @@ class ClinicalDetailsCard extends StatelessWidget {
                   style: GoogleFonts.hankenGrotesk(
                     fontSize: 15,
                     height: 24.38 / 15,
-                    color: AppColors.navy.withValues(alpha: 0.9),
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ],
@@ -144,7 +148,7 @@ class _FieldLabel extends StatelessWidget {
         height: 16.5 / 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.55,
-        color: AppColors.navy.withValues(alpha: 0.5),
+        color: context.colors.textMuted,
       ),
     );
   }

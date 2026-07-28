@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// Search input from the Medical Records (Final) design.
 class RecordsSearchField extends StatelessWidget {
@@ -30,16 +30,16 @@ class RecordsSearchField extends StatelessWidget {
         onChanged: onChanged,
         style: GoogleFonts.hankenGrotesk(
           fontSize: 16,
-          color: AppColors.navy,
+          color: context.colors.textPrimary,
         ),
         decoration: InputDecoration(
           hintText: 'Search records by name or doctor...',
           hintStyle: GoogleFonts.hankenGrotesk(
             fontSize: 16,
-            color: AppColors.navy.withValues(alpha: 0.5),
+            color: context.colors.textMuted,
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: context.colors.surface,
           contentPadding: const EdgeInsets.fromLTRB(0, 17, 16, 18),
           prefixIcon: Padding(
             padding: const EdgeInsets.only(left: 16, right: 14),
@@ -56,7 +56,7 @@ class RecordsSearchField extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
-            borderSide: const BorderSide(color: AppColors.navy, width: 1.5),
+            borderSide: BorderSide(color: context.colors.textPrimary, width: 1.5),
           ),
         ),
       ),

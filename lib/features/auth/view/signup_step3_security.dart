@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../bloc/signup/signup_cubit.dart';
 import '../widgets/step_progress.dart';
 
@@ -62,13 +63,13 @@ class _SignUpStep3SecurityState extends State<SignUpStep3Security> {
             "Let's secure your medical data with biometrics and a private "
             'passcode.',
             style: theme.textTheme.bodyMedium
-                ?.copyWith(color: AppColors.textSecondary),
+                ?.copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.fill,
+              color: context.colors.surfaceMuted,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -83,7 +84,7 @@ class _SignUpStep3SecurityState extends State<SignUpStep3Security> {
                           style: theme.textTheme.titleMedium),
                       Text('Fast, secure access to records',
                           style: theme.textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textSecondary)),
+                              ?.copyWith(color: context.colors.textSecondary)),
                     ],
                   ),
                 ),
@@ -101,7 +102,7 @@ class _SignUpStep3SecurityState extends State<SignUpStep3Security> {
           Text('Use this when biometrics are unavailable',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall
-                  ?.copyWith(color: AppColors.textMuted)),
+                  ?.copyWith(color: context.colors.textMuted)),
           const SizedBox(height: 20),
           _PinDots(length: _pin.length),
           const SizedBox(height: 20),
@@ -124,7 +125,7 @@ class _SignUpStep3SecurityState extends State<SignUpStep3Security> {
           Center(
             child: Text('Your data is encrypted locally on this device.',
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: AppColors.textMuted)),
+                    ?.copyWith(color: context.colors.textMuted)),
           ),
         ],
       ),
@@ -147,8 +148,8 @@ class _PinDots extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: i < length ? AppColors.navy : AppColors.fill,
-              border: Border.all(color: AppColors.divider),
+              color: i < length ? AppColors.navy : context.colors.surfaceMuted,
+              border: Border.all(color: context.colors.border),
             ),
           ),
       ],
@@ -192,7 +193,7 @@ class _Key extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(6),
       child: Material(
-        color: AppColors.fill,
+        color: context.colors.surfaceMuted,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
@@ -202,7 +203,7 @@ class _Key extends StatelessWidget {
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
-                    ?.copyWith(color: AppColors.ink)),
+                    ?.copyWith(color: context.colors.textPrimary)),
           ),
         ),
       ),

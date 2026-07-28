@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// The tabs of [MediBottomNav].
 enum MediTab { home, history, cards, profile }
@@ -38,9 +39,9 @@ class MediBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+        border: Border(top: BorderSide(color: context.colors.border)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -115,7 +116,11 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.navy : AppColors.navInactive;
+    // Navy would vanish on the dark navy bar, so the active tab uses the lime
+    // accent in dark (matching the dark design reference).
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? AppColors.limeFinal : AppColors.navy;
+    final color = isActive ? activeColor : context.colors.textMuted;
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -161,6 +166,9 @@ class _CenterAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The centre action mirrors the active-tab treatment: navy in light, lime
+    // in dark. Its ring cuts the button out of the bar, so it matches the bar.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       width: 60,
       height: 28,
@@ -175,9 +183,9 @@ class _CenterAction extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: AppColors.navy,
+                  color: isDark ? AppColors.limeFinal : AppColors.navy,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 6),
+                  border: Border.all(color: context.colors.surface, width: 6),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),

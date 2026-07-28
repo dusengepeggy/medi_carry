@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../app/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../bloc/app_lock/app_lock_cubit.dart';
 import '../bloc/auth/auth_bloc.dart';
 
@@ -70,7 +71,7 @@ class _LockScreenState extends State<LockScreen> {
               const SizedBox(height: 4),
               Text('Enter your PIN to unlock',
                   style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: AppColors.textSecondary)),
+                      ?.copyWith(color: context.colors.textSecondary)),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -84,8 +85,8 @@ class _LockScreenState extends State<LockScreen> {
                         shape: BoxShape.circle,
                         color: i < _pin.length
                             ? AppColors.navy
-                            : AppColors.fill,
-                        border: Border.all(color: AppColors.divider),
+                            : context.colors.surfaceMuted,
+                        border: Border.all(color: context.colors.border),
                       ),
                     ),
                 ],
@@ -176,19 +177,19 @@ class _Key extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(6),
       child: Material(
-        color: AppColors.fill,
+        color: context.colors.surfaceMuted,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Center(
             child: icon != null
-                ? Icon(icon, color: AppColors.ink)
+                ? Icon(icon, color: context.colors.textPrimary)
                 : Text(label!,
                     style: Theme.of(context)
                         .textTheme
                         .titleLarge
-                        ?.copyWith(color: AppColors.ink)),
+                        ?.copyWith(color: context.colors.textPrimary)),
           ),
         ),
       ),

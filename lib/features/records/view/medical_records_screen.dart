@@ -5,93 +5,58 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../../app/app_routes.dart';
 import '../../../app/app_shell.dart';
 import '../../auth/bloc/auth/auth_bloc.dart';
 import '../../dashboard/widgets/medi_bottom_nav.dart' show MediTab;
+import '../bloc/records_cubit.dart';
+import '../data/records_repository.dart';
 import '../widgets/record_card.dart';
 import '../widgets/record_filter_chips.dart';
 import '../widgets/records_app_bar.dart';
 import '../widgets/records_search_field.dart';
 
 /// Medical Records — an implementation of the "Medical Records (Final)" Figma
-/// frame (node 2:274).
-///
-/// The records are the design's sample content until the records feature is
-/// built; search and filtering already operate on that list so the controls
-/// behave rather than merely appear.
-class MedicalRecordsScreen extends StatefulWidget {
+/// frame (node 2:274), backed by the patient's real records in Firestore via
+/// [RecordsCubit].
+class MedicalRecordsScreen extends StatelessWidget {
   const MedicalRecordsScreen({super.key});
 
   @override
-  State<MedicalRecordsScreen> createState() => _MedicalRecordsScreenState();
+  Widget build(BuildContext context) {
+    final uid = context.select((AuthBloc b) => b.state.user.uid);
+    return BlocProvider(
+      // Keyed on uid so the cubit is recreated once auth resolves the user
+      // (its stream starts empty), rather than staying subscribed to '' .
+      key: ValueKey(uid),
+      create: (_) => RecordsCubit(
+        repository: context.read<RecordsRepository>(),
+        uid: uid,
+      ),
+      child: const _RecordsView(),
+    );
+  }
 }
 
-class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
+class _RecordsView extends StatefulWidget {
+  const _RecordsView();
+
+  @override
+  State<_RecordsView> createState() => _RecordsViewState();
+}
+
+class _RecordsViewState extends State<_RecordsView> {
   /// Consecutive cards overlap to form the design's stacked deck.
   static const _overlap = 16.0;
-
   static const _filters = ['All', 'Diagnoses', 'Medications', 'Labs'];
 
   final _searchController = TextEditingController();
-  String _selectedFilter = 'All';
-  String _query = '';
-
-  /// Placeholder records, mirroring the design's samples.
-  static const _records = [
-    RecordEntry(
-      category: 'LAB RESULT',
-      title: 'Comprehensive Metabolic Panel',
-      subtitle: 'Nairobi Hospital Central Lab • Dr. J. Kamau',
-      meta: 'Oct 24, 2023',
-      icon: AppAssets.activityLab,
-      iconSize: Size(18.057, 18),
-      style: RecordCardStyle.lime,
-    ),
-    RecordEntry(
-      category: 'MEDICATION',
-      title: 'Amoxicillin 500mg',
-      subtitle: '1 capsule every 8 hours for 7 days',
-      meta: 'Active since Oct 10, 2023',
-      icon: AppAssets.activityPrescription,
-      iconSize: Size(20, 22),
-      style: RecordCardStyle.navy,
-      metaIcon: AppAssets.clock,
-      metaIconSize: Size(15, 15),
-    ),
-    RecordEntry(
-      category: 'DIAGNOSIS',
-      title: 'Acute Bronchitis',
-      subtitle: 'Aga Khan University Hospital',
-      meta: 'Sep 15, 2023',
-      icon: AppAssets.activityCheckup,
-      style: RecordCardStyle.light,
-    ),
-  ];
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  /// Category each filter maps to, so the chips actually filter.
-  static const _filterCategories = {
-    'Diagnoses': 'DIAGNOSIS',
-    'Medications': 'MEDICATION',
-    'Labs': 'LAB RESULT',
-  };
-
-  List<RecordEntry> get _visibleRecords {
-    final query = _query.trim().toLowerCase();
-    return _records.where((r) {
-      final category = _filterCategories[_selectedFilter];
-      final matchesFilter = category == null || r.category == category;
-      final matchesQuery = query.isEmpty ||
-          r.title.toLowerCase().contains(query) ||
-          r.subtitle.toLowerCase().contains(query);
-      return matchesFilter && matchesQuery;
-    }).toList();
   }
 
   String get _greeting {
@@ -110,16 +75,16 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
   @override
   Widget build(BuildContext context) {
     final displayName = context.select((AuthBloc b) => b.state.user.displayName);
-    final records = _visibleRecords;
+    final cubit = context.read<RecordsCubit>();
 
     return Scaffold(
-      backgroundColor: AppColors.indigoSurface,
+      backgroundColor: context.colors.surfaceMuted,
       extendBody: true,
       floatingActionButton: SizedBox(
         width: 56,
         height: 56,
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () => AppNav.openAddRecord(context),
           backgroundColor: AppColors.indigoFinal,
           elevation: 8,
           shape: const CircleBorder(),
@@ -135,54 +100,88 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
             onSearch: () {},
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 16, bottom: 136),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: RecordsSearchField(
-                      controller: _searchController,
-                      onChanged: (v) => setState(() => _query = v),
+            child: BlocBuilder<RecordsCubit, RecordsState>(
+              builder: (context, state) => SingleChildScrollView(
+                padding: const EdgeInsets.only(top: 16, bottom: 136),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: RecordsSearchField(
+                        controller: _searchController,
+                        onChanged: cubit.search,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  RecordFilterChips(
-                    filters: _filters,
-                    selected: _selectedFilter,
-                    onSelected: (f) => setState(() => _selectedFilter = f),
-                  ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _SectionHeader(),
-                        const SizedBox(height: 16),
-                        if (records.isEmpty)
-                          const _EmptyState()
-                        else
-                          // Each card is pulled up over the previous one to
-                          // form the design's stacked deck.
-                          for (var i = 0; i < records.length; i++)
-                            Transform.translate(
-                              offset: Offset(0, -_overlap * i),
-                              child: RecordCard(
-                                record: records[i],
-                                onTap: () => AppNav.openRecordDetails(context),
-                              ),
-                            ),
-                      ],
+                    const SizedBox(height: 8),
+                    RecordFilterChips(
+                      filters: _filters,
+                      selected: state.filter,
+                      onSelected: cubit.selectFilter,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const _SectionHeader(),
+                          const SizedBox(height: 16),
+                          _RecordsBody(state: state, overlap: _overlap),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RecordsBody extends StatelessWidget {
+  const _RecordsBody({required this.state, required this.overlap});
+
+  final RecordsState state;
+  final double overlap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (state.status == RecordsStatus.loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (state.status == RecordsStatus.error) {
+      return const _MessageState('Could not load your records.');
+    }
+    if (state.records.isEmpty) {
+      return const _MessageState(
+        'No records yet. Tap + to add your first record.',
+      );
+    }
+    final records = state.visibleRecords;
+    if (records.isEmpty) {
+      return const _MessageState('No records match your search.');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Each card is pulled up over the previous one to form the design's
+        // stacked deck.
+        for (var i = 0; i < records.length; i++)
+          Transform.translate(
+            offset: Offset(0, -overlap * i),
+            child: RecordCard(
+              record: records[i].toEntry(),
+              onTap: () => AppNav.openRecordDetails(context, records[i]),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -203,7 +202,7 @@ class _SectionHeader extends StatelessWidget {
               fontSize: 20,
               height: 28 / 20,
               fontWeight: FontWeight.w600,
-              color: AppColors.navy,
+              color: context.colors.textPrimary,
             ),
           ),
           GestureDetector(
@@ -225,9 +224,12 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-/// Not in the design, but the filters and search can empty the list.
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+/// Empty / no-match / error message (none of these are in the design, but the
+/// list can be empty, filtered to nothing, or fail to load).
+class _MessageState extends StatelessWidget {
+  const _MessageState(this.message);
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -235,11 +237,12 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Center(
         child: Text(
-          'No records match your search.',
+          message,
+          textAlign: TextAlign.center,
           style: GoogleFonts.hankenGrotesk(
             fontSize: 16,
             height: 24 / 16,
-            color: AppColors.navy.withValues(alpha: 0.6),
+            color: context.colors.textSecondary,
           ),
         ),
       ),

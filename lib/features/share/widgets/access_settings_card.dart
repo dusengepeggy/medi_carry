@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// "Access Settings" card from the Share Records (Final) design: how long a
 /// share lasts, the encryption assurance, and the send action.
@@ -32,9 +33,9 @@ class AccessSettingsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: AppColors.lavenderSurface,
+        color: context.colors.surfaceMuted,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.borderGray),
+        border: Border.all(color: context.colors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -54,7 +55,7 @@ class AccessSettingsCard extends StatelessWidget {
                 style: GoogleFonts.hankenGrotesk(
                   fontSize: 16,
                   height: 24 / 16,
-                  color: AppColors.navy,
+                  color: context.colors.textPrimary,
                 ),
               ),
               GestureDetector(
@@ -62,8 +63,8 @@ class AccessSettingsCard extends StatelessWidget {
                 child: Container(
                   width: 40,
                   height: 40,
-                  decoration: const BoxDecoration(
-                    color: AppColors.graySurface,
+                  decoration: BoxDecoration(
+                    color: context.colors.surfaceMuted,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -84,7 +85,7 @@ class AccessSettingsCard extends StatelessWidget {
               fontSize: 12,
               height: 16 / 12,
               letterSpacing: 0.6,
-              color: AppColors.textGray,
+              color: context.colors.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -200,9 +201,9 @@ class _EncryptionNote extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        color: AppColors.graySurface,
+        color: context.colors.surfaceMuted,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGray),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +228,7 @@ class _EncryptionNote extends StatelessWidget {
                   style: GoogleFonts.hankenGrotesk(
                     fontSize: 12,
                     height: 16 / 12,
-                    color: AppColors.textGray,
+                    color: context.colors.textSecondary,
                   ),
                 ),
               ],

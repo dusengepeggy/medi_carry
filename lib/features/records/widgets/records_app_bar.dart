@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// Translucent top app bar from the Medical Records (Final) design: avatar,
 /// stacked greeting/name, and a search action.
@@ -33,7 +33,7 @@ class RecordsAppBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
         child: Container(
-          color: AppColors.indigoSurface.withValues(alpha: 0.9),
+          color: context.colors.surfaceMuted.withValues(alpha: 0.9),
           child: SafeArea(
             bottom: false,
             child: Container(
@@ -53,7 +53,7 @@ class RecordsAppBar extends StatelessWidget {
                             height: 48,
                             padding: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
-                              color: AppColors.graySurface,
+                              color: context.colors.surfaceMuted,
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2),
                               boxShadow: [
@@ -88,7 +88,7 @@ class RecordsAppBar extends StatelessWidget {
                                   height: 16 / 12,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.6,
-                                  color: AppColors.navy.withValues(alpha: 0.7),
+                                  color: context.colors.textSecondary,
                                 ),
                               ),
                               Text(
@@ -101,7 +101,7 @@ class RecordsAppBar extends StatelessWidget {
                                   fontSize: 20,
                                   height: 1,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.navy,
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                             ],
@@ -116,7 +116,7 @@ class RecordsAppBar extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: AppColors.canvas,
+                        color: context.colors.canvas,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(

@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// MediCarry — a patient owns their entire tree and no one else can read it.
+// Deploy with: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // A signed-in patient may read/write only their own document and every
+    // subcollection beneath it (profile, records, shares). Everything else is
+    // denied by default.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@ import '../../../core/theme/app_assets.dart';
 import '../../../app/app_routes.dart';
 import '../../../core/services/emergency_card_store.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../auth/bloc/auth/auth_bloc.dart';
 import '../../auth/data/user_repository.dart';
 import '../../auth/models/patient_profile.dart';
@@ -28,7 +29,7 @@ class ProfileScreen extends StatelessWidget {
     final user = context.select((AuthBloc b) => b.state.user);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.canvas,
       extendBody: true,
       body: Column(
         children: [
@@ -100,7 +101,7 @@ class _ProfileAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.background,
+      color: context.colors.canvas,
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -133,7 +134,7 @@ class _ProfileAppBar extends StatelessWidget {
                       fontSize: 18,
                       height: 24 / 18,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.ink,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ],
@@ -234,7 +235,7 @@ class _SignOutButton extends StatelessWidget {
                 fontSize: 16,
                 height: 24 / 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.background,
+                color: context.colors.canvas,
               ),
             ),
           ],

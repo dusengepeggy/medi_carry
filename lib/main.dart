@@ -11,6 +11,8 @@ import 'core/services/secure_storage_service.dart';
 import 'core/services/theme_mode_store.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/data/user_repository.dart';
+import 'features/records/data/records_repository.dart';
+import 'features/share/data/shares_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +38,8 @@ Future<void> main() async {
       biometricService: BiometricService(),
       emergencyCardStore: EmergencyCardStore(),
       themeModeStore: ThemeModeStore(),
+      recordsRepository: RecordsRepository(),
+      sharesRepository: SharesRepository(),
     ),
   );
 }

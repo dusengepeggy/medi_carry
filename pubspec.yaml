@@ -61,6 +61,15 @@ dependencies:
   # Renders the SVG icons exported from the Figma design.
   flutter_svg: ^2.0.10
 
+  # Offline QR sharing: generate the code, scan it, and encrypt the payload
+  # with a PIN (AES-GCM + PBKDF2 via pointycastle, which `encrypt` bundles).
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.2.3
+  encrypt: ^5.0.3
+  # Directly referenced by share_crypto.dart for PBKDF2 (also pulled in by
+  # `encrypt`); declared explicitly per the depend_on_referenced_packages lint.
+  pointycastle: ^3.9.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -68,6 +77,9 @@ dev_dependencies:
   # Bloc/cubit testing with mocked repositories (no live Firebase needed).
   bloc_test: ^9.1.7
   mocktail: ^1.0.4
+
+  # In-memory Firestore for testing the records/shares repositories.
+  fake_cloud_firestore: ^3.0.3
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

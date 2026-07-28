@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// Avatar, name and patient-ID pill from the User Profile design.
 class ProfileHeader extends StatelessWidget {
@@ -65,7 +66,7 @@ class ProfileHeader extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.olive,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.background, width: 4),
+                      border: Border.all(color: context.colors.canvas, width: 4),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.1),
@@ -96,7 +97,7 @@ class ProfileHeader extends StatelessWidget {
             height: 28 / 22,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.22,
-            color: AppColors.ink,
+            color: context.colors.textPrimary,
           ),
         ),
         if (patientId != null) ...[

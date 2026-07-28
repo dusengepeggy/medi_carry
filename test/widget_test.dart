@@ -2,6 +2,7 @@
 // All external dependencies (Firebase-backed repositories, secure storage,
 // biometrics) are mocked so the test needs no live Firebase.
 
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medi_carry/app.dart';
@@ -12,6 +13,8 @@ import 'package:medi_carry/core/services/theme_mode_store.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/data/user_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
+import 'package:medi_carry/features/records/data/records_repository.dart';
+import 'package:medi_carry/features/share/data/shares_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -39,6 +42,7 @@ void main() {
     when(() => secureStorage.clear()).thenAnswer((_) async {});
     when(() => emergencyCardStore.clear()).thenAnswer((_) async {});
 
+    final firestore = FakeFirebaseFirestore();
     await tester.pumpWidget(
       MediCarryApp(
         authRepository: authRepository,
@@ -47,6 +51,8 @@ void main() {
         biometricService: MockBiometricService(),
         emergencyCardStore: emergencyCardStore,
         themeModeStore: themeModeStore,
+        recordsRepository: RecordsRepository(firestore: firestore),
+        sharesRepository: SharesRepository(firestore: firestore),
       ),
     );
     // Let the auth stream emit and the gate resolve to unauthenticated.

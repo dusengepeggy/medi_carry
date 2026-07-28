@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../auth/data/user_repository.dart';
 import '../../auth/models/patient_profile.dart';
 import '../widgets/edit_profile_fields.dart';
@@ -144,7 +145,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -252,7 +253,7 @@ class _EditAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.background,
+      color: context.colors.canvas,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -281,7 +282,7 @@ class _EditAppBar extends StatelessWidget {
                       fontSize: 18,
                       height: 24 / 18,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.ink,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ),
@@ -406,7 +407,7 @@ class _PictureSection extends StatelessWidget {
             fontSize: 18,
             height: 24 / 18,
             fontWeight: FontWeight.w600,
-            color: AppColors.ink,
+            color: context.colors.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
@@ -417,7 +418,7 @@ class _PictureSection extends StatelessWidget {
             fontSize: 11,
             height: 14 / 11,
             fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
           ),
         ),
       ],
@@ -437,7 +438,7 @@ class _FormCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -474,7 +475,7 @@ class _EmergencyContactCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.ink,
+        color: AppColors.navy,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(

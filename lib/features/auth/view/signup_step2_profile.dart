@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../bloc/signup/signup_cubit.dart';
 import '../widgets/step_progress.dart';
 
@@ -76,7 +76,7 @@ class _SignUpStep2ProfileState extends State<SignUpStep2Profile> {
             'Complete your health information to help us provide more accurate '
             'medical assistance.',
             style: theme.textTheme.bodyMedium
-                ?.copyWith(color: AppColors.textSecondary),
+                ?.copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: 24),
           _Label('BLOOD TYPE'),
@@ -117,14 +117,14 @@ class _SignUpStep2ProfileState extends State<SignUpStep2Profile> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.fill,
+              color: context.colors.surfaceMuted,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lock_outline,
-                    size: 18, color: AppColors.textSecondary),
+                Icon(Icons.lock_outline,
+                    size: 18, color: context.colors.textSecondary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -132,7 +132,7 @@ class _SignUpStep2ProfileState extends State<SignUpStep2Profile> {
                     'healthcare professionals during emergencies or when you '
                     'explicitly grant access.',
                     style: theme.textTheme.bodySmall
-                        ?.copyWith(color: AppColors.textSecondary),
+                        ?.copyWith(color: context.colors.textSecondary),
                   ),
                 ),
               ],
@@ -147,7 +147,7 @@ class _SignUpStep2ProfileState extends State<SignUpStep2Profile> {
           Center(
             child: Text('STEP 2 OF 3',
                 style: theme.textTheme.labelMedium
-                    ?.copyWith(color: AppColors.textMuted)),
+                    ?.copyWith(color: context.colors.textMuted)),
           ),
         ],
       ),
@@ -185,7 +185,7 @@ class _Label extends StatelessWidget {
       style: Theme.of(context)
           .textTheme
           .labelMedium
-          ?.copyWith(color: AppColors.textSecondary),
+          ?.copyWith(color: context.colors.textSecondary),
     );
   }
 }

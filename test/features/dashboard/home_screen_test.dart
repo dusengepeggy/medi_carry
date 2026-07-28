@@ -1,3 +1,4 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,18 +7,35 @@ import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
 import 'package:medi_carry/features/dashboard/view/home_screen.dart';
+import 'package:medi_carry/features/records/data/records_repository.dart';
+import 'package:medi_carry/features/records/models/medical_record.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 void main() {
   late MockAuthRepository authRepository;
+  late FakeFirebaseFirestore firestore;
+  late RecordsRepository recordsRepository;
 
-  setUp(() {
+  setUp(() async {
     authRepository = MockAuthRepository();
     when(() => authRepository.user).thenAnswer(
       (_) => Stream<AppUser>.value(
         const AppUser(uid: 'u1', displayName: 'Sarah Johnson'),
+      ),
+    );
+    firestore = FakeFirebaseFirestore();
+    recordsRepository = RecordsRepository(firestore: firestore);
+    await recordsRepository.add(
+      'u1',
+      MedicalRecord(
+        id: '',
+        category: RecordCategory.labResult,
+        title: 'Comprehensive Metabolic Panel',
+        provider: 'City Lab',
+        date: DateTime(2023, 10, 12),
+        createdAt: DateTime(2023, 10, 12),
       ),
     );
   });
@@ -29,12 +47,18 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      BlocProvider(
-        create: (_) => AuthBloc(authRepository: authRepository),
-        child: MaterialApp(theme: AppTheme.light, home: const HomeScreen()),
+      RepositoryProvider<RecordsRepository>.value(
+        value: recordsRepository,
+        child: BlocProvider(
+          create: (_) => AuthBloc(authRepository: authRepository),
+          child: MaterialApp(theme: AppTheme.light, home: const HomeScreen()),
+        ),
       ),
     );
-    await tester.pump(const Duration(milliseconds: 50));
+    // Auth resolves the uid → cubit rekeyed → records stream emits.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
   }
 
   testWidgets('renders the dashboard sections from the design', (tester) async {
@@ -66,8 +90,8 @@ void main() {
 
     expect(find.text('Activity'), findsOneWidget);
     expect(find.text('See All'), findsOneWidget);
+    // The seeded real record shows in the activity list.
     expect(find.text('Comprehensive Metabolic Panel'), findsOneWidget);
-    expect(find.text('Oct 12 • City Lab'), findsOneWidget);
     expect(find.text('Add New Record'), findsOneWidget);
     // The bottom nav now lives in AppShell — see test/app/app_shell_test.dart.
   });

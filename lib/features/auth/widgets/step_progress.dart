@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// The 3-step onboarding progress indicator (Account · Health · Secure).
 class StepProgress extends StatelessWidget {
@@ -31,7 +32,7 @@ class StepProgress extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 color: (i + 1) < currentStep
                     ? AppColors.lime
-                    : AppColors.divider.withValues(alpha: 0.5),
+                    : context.colors.border.withValues(alpha: 0.5),
               ),
             ),
         ],
@@ -60,7 +61,7 @@ class _Dot extends StatelessWidget {
         ? AppColors.olive
         : isActive
             ? AppColors.lime
-            : AppColors.fill;
+            : context.colors.surfaceMuted;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -75,7 +76,7 @@ class _Dot extends StatelessWidget {
               : Text(
                   '$index',
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: isActive ? AppColors.ink : AppColors.textMuted,
+                    color: isActive ? AppColors.ink : context.colors.textMuted,
                   ),
                 ),
         ),
@@ -84,8 +85,8 @@ class _Dot extends StatelessWidget {
           label,
           style: theme.textTheme.labelMedium?.copyWith(
             color: isActive || isDone
-                ? AppColors.textSecondary
-                : AppColors.textMuted,
+                ? context.colors.textSecondary
+                : context.colors.textMuted,
           ),
         ),
       ],

@@ -1,3 +1,4 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +6,8 @@ import 'package:medi_carry/core/theme/app_theme.dart';
 import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
+import 'package:medi_carry/features/records/data/records_repository.dart';
+import 'package:medi_carry/features/records/models/medical_record.dart';
 import 'package:medi_carry/features/records/view/medical_records_screen.dart';
 import 'package:medi_carry/features/records/widgets/record_card.dart';
 import 'package:medi_carry/features/records/widgets/record_filter_chips.dart';
@@ -14,14 +17,41 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 void main() {
   late MockAuthRepository authRepository;
+  late RecordsRepository recordsRepository;
 
-  setUp(() {
+  setUp(() async {
     authRepository = MockAuthRepository();
     when(() => authRepository.user).thenAnswer(
       (_) => Stream<AppUser>.value(
         const AppUser(uid: 'u1', displayName: 'Alex Mwangi'),
       ),
     );
+    recordsRepository = RecordsRepository(firestore: FakeFirebaseFirestore());
+    // Seed the three records the design/tests exercise (newest first).
+    await recordsRepository.add('u1', MedicalRecord(
+      id: '',
+      category: RecordCategory.diagnosis,
+      title: 'Acute Bronchitis',
+      provider: 'Aga Khan University Hospital',
+      date: DateTime(2023, 9, 15),
+      createdAt: DateTime(2023, 9, 15),
+    ));
+    await recordsRepository.add('u1', MedicalRecord(
+      id: '',
+      category: RecordCategory.medication,
+      title: 'Amoxicillin 500mg',
+      detail: '1 capsule every 8 hours for 7 days',
+      date: DateTime(2023, 10, 10),
+      createdAt: DateTime(2023, 10, 10),
+    ));
+    await recordsRepository.add('u1', MedicalRecord(
+      id: '',
+      category: RecordCategory.labResult,
+      title: 'Comprehensive Metabolic Panel',
+      provider: 'Nairobi Hospital Central Lab • Dr. J. Kamau',
+      date: DateTime(2023, 10, 24),
+      createdAt: DateTime(2023, 10, 24),
+    ));
   });
 
   Future<void> pumpRecords(WidgetTester tester) async {
@@ -31,15 +61,22 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      BlocProvider(
-        create: (_) => AuthBloc(authRepository: authRepository),
-        child: MaterialApp(
-          theme: AppTheme.light,
-          home: const MedicalRecordsScreen(),
+      RepositoryProvider<RecordsRepository>.value(
+        value: recordsRepository,
+        child: BlocProvider(
+          create: (_) => AuthBloc(authRepository: authRepository),
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: const MedicalRecordsScreen(),
+          ),
         ),
       ),
     );
-    await tester.pump(const Duration(milliseconds: 50));
+    // Several async hops: auth resolves the uid → the cubit is rekeyed →
+    // the records stream emits → the cubit rebuilds.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
   }
 
   testWidgets('renders the app bar, search, filters and record cards',

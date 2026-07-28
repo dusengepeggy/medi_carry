@@ -5,7 +5,7 @@ import '../features/dashboard/view/home_screen.dart';
 import '../features/dashboard/widgets/medi_bottom_nav.dart';
 import '../features/profile/view/profile_screen.dart';
 import '../features/records/view/medical_records_screen.dart';
-import 'app_routes.dart';
+import '../features/share/view/share_records_screen.dart';
 
 /// The authenticated app shell: four tabs over an [IndexedStack], each with
 /// its own [Navigator], plus the single bottom bar.
@@ -78,6 +78,15 @@ class _AppShellState extends State<AppShell> {
       return;
     }
     setState(() => _index = target);
+  }
+
+  /// Opens the QR scan-and-share hub inside the active tab's navigator, so the
+  /// shell's bottom bar stays visible and the patient can navigate straight
+  /// out of it rather than being trapped on a full-screen modal.
+  void _openShareHub() {
+    _currentNavigator?.push(
+      MaterialPageRoute<void>(builder: (_) => const ShareRecordsScreen()),
+    );
   }
 
   /// Back pops within the active tab; at a tab root it falls back to Home;

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// The three record-card treatments in the Medical Records (Final) design.
 enum RecordCardStyle {
@@ -59,46 +60,52 @@ class RecordCard extends StatelessWidget {
 
   bool get _isNavy => record.style == RecordCardStyle.navy;
 
-  Color get _background => switch (record.style) {
+  // The lime and navy cards are brand surfaces — identical in light and dark.
+  // Only the `light` card flips, so it reads its colours from the theme.
+  Color _background(BuildContext context) => switch (record.style) {
         RecordCardStyle.lime => AppColors.limeFinal,
         RecordCardStyle.navy => AppColors.navy,
-        RecordCardStyle.light => Colors.white,
+        RecordCardStyle.light => context.colors.surface,
       };
 
-  Color get _foreground => _isNavy ? Colors.white : AppColors.navy;
+  Color _foreground(BuildContext context) => switch (record.style) {
+        RecordCardStyle.lime => AppColors.navy,
+        RecordCardStyle.navy => Colors.white,
+        RecordCardStyle.light => context.colors.textPrimary,
+      };
 
   /// Tint for the category glyph and the trailing arrow.
-  Color get _iconTint => _foreground;
+  Color _iconTint(BuildContext context) => _foreground(context);
 
-  Color get _categoryColor => switch (record.style) {
+  Color _categoryColor(BuildContext context) => switch (record.style) {
         RecordCardStyle.lime => AppColors.navy.withValues(alpha: 0.8),
         RecordCardStyle.navy => Colors.white.withValues(alpha: 0.8),
-        RecordCardStyle.light => AppColors.navy.withValues(alpha: 0.7),
+        RecordCardStyle.light => context.colors.textSecondary,
       };
 
-  Color get _chipBackground => switch (record.style) {
+  Color _chipBackground(BuildContext context) => switch (record.style) {
         RecordCardStyle.lime => Colors.white.withValues(alpha: 0.4),
         RecordCardStyle.navy => Colors.white.withValues(alpha: 0.2),
-        RecordCardStyle.light => AppColors.indigoSurface,
+        RecordCardStyle.light => context.colors.surfaceMuted,
       };
 
-  Color get _subtitleColor => switch (record.style) {
+  Color _subtitleColor(BuildContext context) => switch (record.style) {
         RecordCardStyle.lime => AppColors.navy.withValues(alpha: 0.8),
         RecordCardStyle.navy => Colors.white.withValues(alpha: 0.8),
-        RecordCardStyle.light => AppColors.navy.withValues(alpha: 0.7),
+        RecordCardStyle.light => context.colors.textSecondary,
       };
 
-  Color get _metaColor => switch (record.style) {
+  Color _metaColor(BuildContext context) => switch (record.style) {
         RecordCardStyle.lime => AppColors.navy.withValues(alpha: 0.7),
         RecordCardStyle.navy => Colors.white.withValues(alpha: 0.7),
-        RecordCardStyle.light => AppColors.navy.withValues(alpha: 0.6),
+        RecordCardStyle.light => context.colors.textSecondary,
       };
 
-  BoxBorder? get _border => switch (record.style) {
+  BoxBorder? _border(BuildContext context) => switch (record.style) {
         RecordCardStyle.lime =>
           Border.all(color: AppColors.limeFinal.withValues(alpha: 0.2)),
         RecordCardStyle.navy => null,
-        RecordCardStyle.light => Border.all(color: AppColors.indigoSurface),
+        RecordCardStyle.light => Border.all(color: context.colors.border),
       };
 
   List<BoxShadow> get _shadow => switch (record.style) {
@@ -136,9 +143,9 @@ class RecordCard extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.all(_isNavy ? 24 : 25),
           decoration: BoxDecoration(
-            color: _background,
+            color: _background(context),
             borderRadius: BorderRadius.circular(32),
-            border: _border,
+            border: _border(context),
             boxShadow: _shadow,
           ),
           child: Column(
@@ -151,7 +158,7 @@ class RecordCard extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: _chipBackground,
+                      color: _chipBackground(context),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -160,7 +167,7 @@ class RecordCard extends StatelessWidget {
                         width: record.iconSize.width,
                         height: record.iconSize.height,
                         colorFilter:
-                            ColorFilter.mode(_iconTint, BlendMode.srcIn),
+                            ColorFilter.mode(_iconTint(context), BlendMode.srcIn),
                       ),
                     ),
                   ),
@@ -175,7 +182,7 @@ class RecordCard extends StatelessWidget {
                         height: 20 / 14,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.7,
-                        color: _categoryColor,
+                        color: _categoryColor(context),
                       ),
                     ),
                   ),
@@ -184,7 +191,7 @@ class RecordCard extends StatelessWidget {
                     AppAssets.recordArrow,
                     width: 16,
                     height: 16,
-                    colorFilter: ColorFilter.mode(_iconTint, BlendMode.srcIn),
+                    colorFilter: ColorFilter.mode(_iconTint(context), BlendMode.srcIn),
                   ),
                 ],
               ),
@@ -195,7 +202,7 @@ class RecordCard extends StatelessWidget {
                   fontSize: 28,
                   height: 35 / 28,
                   fontWeight: FontWeight.w700,
-                  color: _foreground,
+                  color: _foreground(context),
                 ),
               ),
               const SizedBox(height: 8),
@@ -204,7 +211,7 @@ class RecordCard extends StatelessWidget {
                 style: GoogleFonts.hankenGrotesk(
                   fontSize: 16,
                   height: 24 / 16,
-                  color: _subtitleColor,
+                  color: _subtitleColor(context),
                 ),
               ),
               const SizedBox(height: 16),
@@ -214,7 +221,7 @@ class RecordCard extends StatelessWidget {
                     record.metaIcon,
                     width: record.metaIconSize.width,
                     height: record.metaIconSize.height,
-                    colorFilter: ColorFilter.mode(_metaColor, BlendMode.srcIn),
+                    colorFilter: ColorFilter.mode(_metaColor(context), BlendMode.srcIn),
                   ),
                   const SizedBox(width: 6),
                   Flexible(
@@ -227,7 +234,7 @@ class RecordCard extends StatelessWidget {
                         height: 20 / 14,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.7,
-                        color: _metaColor,
+                        color: _metaColor(context),
                       ),
                     ),
                   ),

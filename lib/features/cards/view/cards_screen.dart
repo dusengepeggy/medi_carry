@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// "My Cards" — the insurance / patient-ID wallet.
 ///
@@ -14,7 +15,7 @@ class CardsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -26,12 +27,12 @@ class CardsScreen extends StatelessWidget {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: AppColors.indigoSurface,
+                    color: context.colors.surfaceMuted,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.badge_outlined,
-                    color: AppColors.navy,
+                    color: context.colors.textPrimary,
                     size: 28,
                   ),
                 ),
@@ -42,7 +43,7 @@ class CardsScreen extends StatelessWidget {
                     fontSize: 24,
                     height: 32 / 24,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.navy,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -53,7 +54,7 @@ class CardsScreen extends StatelessWidget {
                   style: GoogleFonts.hankenGrotesk(
                     fontSize: 16,
                     height: 24 / 16,
-                    color: AppColors.navy.withValues(alpha: 0.6),
+                    color: context.colors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),

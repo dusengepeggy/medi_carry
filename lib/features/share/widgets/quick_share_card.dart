@@ -10,9 +10,12 @@ import '../../../core/theme/app_colors.dart';
 /// "In-Person Quick Share" navy card from the Share Records (Final) design —
 /// the offline QR hand-off that is MediCarry's core differentiator.
 class QuickShareCard extends StatelessWidget {
-  const QuickShareCard({super.key, this.onShowQr});
+  const QuickShareCard({super.key, this.onShowQr, this.busy = false});
 
   final VoidCallback? onShowQr;
+
+  /// True while the encrypted code is being generated.
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +78,7 @@ class QuickShareCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _ShowQrButton(onTap: onShowQr),
+                  _ShowQrButton(onTap: busy ? null : onShowQr, busy: busy),
                   const SizedBox(height: 32),
                   const _QrPanel(),
                 ],
@@ -147,8 +150,9 @@ class _Badge extends StatelessWidget {
 }
 
 class _ShowQrButton extends StatelessWidget {
-  const _ShowQrButton({this.onTap});
+  const _ShowQrButton({this.onTap, this.busy = false});
   final VoidCallback? onTap;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -163,21 +167,30 @@ class _ShowQrButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(AppAssets.showQr, width: 18, height: 18),
-            const SizedBox(width: 8),
-            Text(
-              'Show QR',
-              style: GoogleFonts.hankenGrotesk(
-                fontSize: 16,
-                height: 24 / 16,
-                color: AppColors.navy,
+        child: busy
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(AppColors.navy),
+                ),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgPicture.asset(AppAssets.showQr, width: 18, height: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Show QR',
+                    style: GoogleFonts.hankenGrotesk(
+                      fontSize: 16,
+                      height: 24 / 16,
+                      color: AppColors.navy,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

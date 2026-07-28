@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// A scanned document attached to a record.
 class Attachment {
@@ -60,7 +61,7 @@ class AttachmentsSection extends StatelessWidget {
                   fontSize: 18,
                   height: 27 / 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.navy,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ),
@@ -68,7 +69,7 @@ class AttachmentsSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.indigoSurface,
+                color: context.colors.surfaceMuted,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -78,7 +79,7 @@ class AttachmentsSection extends StatelessWidget {
                   fontSize: 12,
                   height: 18 / 12,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.navy.withValues(alpha: 0.5),
+                  color: context.colors.textMuted,
                 ),
               ),
             ),
@@ -132,7 +133,7 @@ class _AttachmentCard extends StatelessWidget {
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      AppColors.navy.withValues(alpha: 0.9),
+                      context.colors.textPrimary,
                       AppColors.navy.withValues(alpha: 0.2),
                       AppColors.navy.withValues(alpha: 0),
                     ],

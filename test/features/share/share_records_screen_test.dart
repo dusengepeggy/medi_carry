@@ -1,20 +1,28 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medi_carry/core/theme/app_theme.dart';
 import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
+import 'package:medi_carry/features/auth/data/user_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
+import 'package:medi_carry/features/records/data/records_repository.dart';
+import 'package:medi_carry/features/share/data/shares_repository.dart';
 import 'package:medi_carry/features/share/view/share_records_screen.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
+class MockUserRepository extends Mock implements UserRepository {}
+
 void main() {
   late MockAuthRepository authRepository;
+  late FakeFirebaseFirestore firestore;
 
   setUp(() {
     authRepository = MockAuthRepository();
+    firestore = FakeFirebaseFirestore();
     when(() => authRepository.user).thenAnswer(
       (_) => Stream<AppUser>.value(
         const AppUser(uid: 'u1', displayName: 'Sarah Johnson'),
@@ -29,11 +37,20 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      BlocProvider(
-        create: (_) => AuthBloc(authRepository: authRepository),
-        child: MaterialApp(
-          theme: AppTheme.light,
-          home: const ShareRecordsScreen(),
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<UserRepository>.value(value: MockUserRepository()),
+          RepositoryProvider<RecordsRepository>.value(
+              value: RecordsRepository(firestore: firestore)),
+          RepositoryProvider<SharesRepository>.value(
+              value: SharesRepository(firestore: firestore)),
+        ],
+        child: BlocProvider(
+          create: (_) => AuthBloc(authRepository: authRepository),
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: const ShareRecordsScreen(),
+          ),
         ),
       ),
     );
@@ -45,61 +62,33 @@ void main() {
 
     expect(find.text('Hi, Sarah'), findsOneWidget);
     expect(find.text('Share Records'), findsOneWidget);
-    expect(
-      find.text(
-        'Securely provide access to your health history to doctors, clinics, '
-        'or caregivers.',
-      ),
-      findsOneWidget,
-    );
-
-    // Quick Share card — the offline QR hand-off.
     expect(find.text('In-Person Quick Share'), findsOneWidget);
-    expect(find.text('Generate QR Code'), findsOneWidget);
-    expect(
-      find.text(
-        'Immediate, temporary access during a consultation. Works perfectly '
-        'offline.',
-      ),
-      findsOneWidget,
-    );
     expect(find.text('Show QR'), findsOneWidget);
+    expect(find.text('Scan a shared code'), findsOneWidget);
   });
 
-  testWidgets('renders export, access settings and active shares',
-      (tester) async {
+  testWidgets('shows the granular category selection', (tester) async {
     await pumpShare(tester);
-    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -900));
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -600));
     await tester.pump();
 
-    expect(find.text('Export History'), findsOneWidget);
-    expect(find.text('Download PDF'), findsOneWidget);
-    expect(find.text('Access Settings'), findsOneWidget);
-    expect(find.text('DURATION'), findsOneWidget);
-    expect(find.text('End-to-End Encrypted'), findsOneWidget);
-    expect(find.text('Send Link'), findsOneWidget);
+    expect(find.text('Customize Sharing Access'), findsOneWidget);
+    expect(find.text('Basic Profile & Blood Type'), findsOneWidget);
+    expect(find.text('Allergies'), findsOneWidget);
+    expect(find.text('Current Medications'), findsOneWidget);
+    expect(find.text('Full Medical History'), findsOneWidget);
+  });
 
-    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -700));
+  testWidgets('active shares starts empty with an explanatory message',
+      (tester) async {
+    await pumpShare(tester);
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -1400));
     await tester.pump();
 
     expect(find.text('Active Shares'), findsOneWidget);
-    expect(find.text('Nairobi General Hospital'), findsOneWidget);
-    expect(find.text('Expires in 2 days'), findsOneWidget);
-  });
-
-  testWidgets('duration selection updates the field', (tester) async {
-    await pumpShare(tester);
-    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -900));
-    await tester.pump();
-
-    expect(find.text('24 Hours'), findsOneWidget);
-
-    await tester.tap(find.text('24 Hours'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('7 Days').last);
-    await tester.pumpAndSettle();
-
-    expect(find.text('7 Days'), findsOneWidget);
-    expect(find.text('24 Hours'), findsNothing);
+    expect(
+      find.textContaining('No active shares'),
+      findsOneWidget,
+    );
   });
 }

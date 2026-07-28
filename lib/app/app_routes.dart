@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/auth/models/patient_profile.dart';
 import '../features/emergency/view/emergency_info_screen.dart';
 import '../features/profile/view/edit_profile_screen.dart';
+import '../features/records/models/medical_record.dart';
 import '../features/records/view/add_record_screen.dart';
 import '../features/records/view/record_details_screen.dart';
 import '../features/share/view/share_records_screen.dart';
@@ -18,9 +19,14 @@ abstract final class AppNav {
   AppNav._();
 
   // ---- Pushed inside the current tab (bottom bar stays visible) ----------
-  static Future<void> openRecordDetails(BuildContext context) =>
+  static Future<void> openRecordDetails(
+    BuildContext context,
+    MedicalRecord record,
+  ) =>
       Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const RecordDetailsScreen()),
+        MaterialPageRoute<void>(
+          builder: (_) => RecordDetailsScreen(record: record),
+        ),
       );
 
   static Future<void> openShare(BuildContext context) =>
@@ -29,14 +35,6 @@ abstract final class AppNav {
       );
 
   // ---- Pushed on the root navigator (covers the shell) -------------------
-
-  static Future<void> openShareHub(BuildContext context) =>
-      Navigator.of(context, rootNavigator: true).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const ShareRecordsScreen(),
-          fullscreenDialog: true,
-        ),
-      );
 
   /// Emergency info must also open from the lock screen, where no shell
   /// exists, so it always uses the root navigator.

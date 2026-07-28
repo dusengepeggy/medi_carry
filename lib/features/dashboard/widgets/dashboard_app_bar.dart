@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 
 /// Top app bar from the Dashboard (Final) design: avatar, wordmark, search.
 class DashboardAppBar extends StatelessWidget {
@@ -59,7 +59,7 @@ class DashboardAppBar extends StatelessWidget {
                   height: 30 / 20,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.5,
-                  color: AppColors.navy,
+                  color: context.colors.textPrimary,
                 ),
               ),
               SizedBox(
