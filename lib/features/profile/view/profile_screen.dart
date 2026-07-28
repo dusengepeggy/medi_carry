@@ -61,6 +61,7 @@ class ProfileScreen extends StatelessWidget {
                           ProfileHeader(
                             name: name,
                             patientId: profile?.patientId,
+                            photoUrl: profile?.photoUrl,
                             onEditPhoto: profile == null
                                 ? null
                                 : () => _openEditProfile(context, profile),

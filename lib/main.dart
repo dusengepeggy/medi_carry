@@ -1,13 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'app.dart';
 import 'core/config/env.dart';
 import 'core/config/firebase_config.dart';
 import 'core/services/biometric_service.dart';
+import 'core/services/cloudinary_storage.dart';
 import 'core/services/emergency_card_store.dart';
 import 'core/services/secure_storage_service.dart';
 import 'core/services/theme_mode_store.dart';
@@ -42,6 +41,7 @@ Future<void> main() async {
       themeModeStore: ThemeModeStore(),
       recordsRepository: RecordsRepository(),
       sharesRepository: SharesRepository(),
+      fileStorage: CloudinaryStorage(),
     ),
   );
 }

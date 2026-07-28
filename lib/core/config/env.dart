@@ -56,6 +56,13 @@ abstract final class Env {
   /// The "iOS" OAuth client ID (iOS/macOS only).
   static String? get googleIosClientId => _optional('GOOGLE_IOS_CLIENT_ID');
 
+  // ---- Cloudinary (file storage) ----
+  // Optional so a missing value never blocks startup; the storage service
+  // reports clearly when it's asked to upload without being configured.
+  static String? get cloudinaryCloudName => _optional('CLOUDINARY_CLOUD_NAME');
+  static String? get cloudinaryUploadPreset =>
+      _optional('CLOUDINARY_UPLOAD_PRESET');
+
   static String _required(String key) {
     final value = dotenv.maybeGet(key);
     if (value == null || value.trim().isEmpty) {

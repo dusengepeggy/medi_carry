@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medi_carry/app.dart';
 import 'package:medi_carry/core/services/biometric_service.dart';
+import 'package:medi_carry/core/services/cloudinary_storage.dart';
 import 'package:medi_carry/core/services/emergency_card_store.dart';
 import 'package:medi_carry/core/services/secure_storage_service.dart';
 import 'package:medi_carry/core/services/theme_mode_store.dart';
@@ -53,6 +54,7 @@ void main() {
         themeModeStore: themeModeStore,
         recordsRepository: RecordsRepository(firestore: firestore),
         sharesRepository: SharesRepository(firestore: firestore),
+        fileStorage: CloudinaryStorage(),
       ),
     );
     // Let the auth stream emit and the gate resolve to unauthenticated.

@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../../core/services/file_storage.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../auth/data/user_repository.dart';
 import '../../auth/models/patient_profile.dart';
 import '../widgets/edit_profile_fields.dart';
+import '../widgets/patient_avatar.dart';
 
 /// Edit Profile — an implementation of the "Edit Profile" Figma frame
 /// (node 25:447).
@@ -38,7 +41,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   DateTime? _dateOfBirth;
   String? _bloodType;
   String? _gender;
+  String? _photoUrl;
   bool _isSaving = false;
+  bool _uploadingPhoto = false;
 
   @override
   void initState() {
@@ -52,6 +57,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _dateOfBirth = p.dateOfBirth == null ? null : DateTime.tryParse(p.dateOfBirth!);
     _bloodType = _bloodTypes.contains(p.bloodType) ? p.bloodType : null;
     _gender = _genders.contains(p.gender) ? p.gender : null;
+    _photoUrl = p.photoUrl;
+  }
+
+  Future<void> _pickPhoto() async {
+    final storage = context.read<FileStorage>();
+    if (!storage.isConfigured) {
+      _showMessage('Photo uploads are unavailable (Cloudinary not configured).',
+          isError: true);
+      return;
+    }
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+
+    setState(() => _uploadingPhoto = true);
+    try {
+      final stored =
+          await storage.upload(picked.path, folder: 'avatars', kind: 'image');
+      if (mounted) setState(() => _photoUrl = stored.url);
+    } on FileStorageException catch (e) {
+      if (mounted) _showMessage(e.message, isError: true);
+    } finally {
+      if (mounted) setState(() => _uploadingPhoto = false);
+    }
   }
 
   @override
@@ -94,6 +126,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       gender: _gender,
       emergencyContactName: _trimmedOrNull(_contactNameController.text),
       emergencyContactPhone: _trimmedOrNull(_contactPhoneController.text),
+      photoUrl: _photoUrl,
     );
 
     try {
@@ -167,7 +200,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               ? widget.profile.fullName
                               : _nameController.text.trim(),
                           patientId: widget.profile.patientId,
-                          onChangePhoto: () {},
+                          photoUrl: _photoUrl,
+                          uploading: _uploadingPhoto,
+                          onChangePhoto: _pickPhoto,
                         ),
                         const SizedBox(height: 32),
                         _FormCard(
@@ -330,11 +365,15 @@ class _PictureSection extends StatelessWidget {
   const _PictureSection({
     required this.name,
     required this.patientId,
+    this.photoUrl,
+    this.uploading = false,
     this.onChangePhoto,
   });
 
   final String name;
   final String patientId;
+  final String? photoUrl;
+  final bool uploading;
   final VoidCallback? onChangePhoto;
 
   @override
@@ -362,19 +401,15 @@ class _PictureSection extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: ClipOval(
-                  // Stand-in until patient profile photos are wired up.
-                  child: Image.asset(
-                    AppAssets.avatarPlaceholder,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                child: uploading
+                    ? const Center(child: CircularProgressIndicator())
+                    : PatientAvatar(photoUrl: photoUrl, size: 88),
               ),
               Positioned(
                 right: 0,
                 bottom: 0,
                 child: GestureDetector(
-                  onTap: onChangePhoto,
+                  onTap: uploading ? null : onChangePhoto,
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(

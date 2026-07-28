@@ -1,7 +1,9 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/services/file_storage.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../auth/bloc/auth/auth_bloc.dart';
@@ -27,7 +29,53 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
 
   RecordCategory _category = RecordCategory.labResult;
   DateTime _date = DateTime.now();
+  final List<RecordAttachment> _attachments = [];
   bool _saving = false;
+  bool _uploading = false;
+
+  static String _kindFor(String? extension) {
+    final ext = (extension ?? '').toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].contains(ext)) {
+      return 'image';
+    }
+    if (ext == 'pdf') return 'pdf';
+    return 'raw';
+  }
+
+  Future<void> _pickAttachments() async {
+    final storage = context.read<FileStorage>();
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'heic', 'pdf'],
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    setState(() => _uploading = true);
+    try {
+      for (final file in result.files) {
+        final path = file.path;
+        if (path == null) continue;
+        final stored = await storage.upload(
+          path,
+          folder: 'records',
+          kind: _kindFor(file.extension),
+        );
+        _attachments.add(RecordAttachment(
+          url: stored.url,
+          name: file.name,
+          kind: stored.kind,
+        ));
+      }
+    } on FileStorageException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -64,6 +112,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
       notes: _notesController.text.trim(),
       date: _date,
       createdAt: DateTime.now(),
+      attachments: List.of(_attachments),
     );
     try {
       await context.read<RecordsRepository>().add(uid, record);
@@ -150,11 +199,19 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 hint: 'Clinician notes',
                 maxLines: 4,
               ),
+              const SizedBox(height: 20),
+              _AttachmentsField(
+                attachments: _attachments,
+                uploading: _uploading,
+                enabled: context.read<FileStorage>().isConfigured,
+                onAdd: _pickAttachments,
+                onRemove: (a) => setState(() => _attachments.remove(a)),
+              ),
               const SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: _saving ? null : _save,
+                  onPressed: (_saving || _uploading) ? null : _save,
                   style: TextButton.styleFrom(
                     backgroundColor: AppColors.navy,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -262,6 +319,99 @@ class _DateField extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AttachmentsField extends StatelessWidget {
+  const _AttachmentsField({
+    required this.attachments,
+    required this.uploading,
+    required this.enabled,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final List<RecordAttachment> attachments;
+  final bool uploading;
+  final bool enabled;
+  final VoidCallback onAdd;
+  final void Function(RecordAttachment) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Label('ATTACHMENTS (IMAGES / PDF)'),
+        const SizedBox(height: 8),
+        if (!enabled)
+          Text(
+            'File uploads are unavailable — Cloudinary is not configured.',
+            style: GoogleFonts.hankenGrotesk(
+              fontSize: 13,
+              color: colors.textMuted,
+            ),
+          )
+        else ...[
+          for (final a in attachments)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: colors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      a.isImage ? Icons.image_outlined : Icons.picture_as_pdf_outlined,
+                      size: 20,
+                      color: colors.textSecondary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        a.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.hankenGrotesk(
+                          fontSize: 14,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => onRemove(a),
+                      icon: Icon(Icons.close, size: 18, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          OutlinedButton.icon(
+            onPressed: uploading ? null : onAdd,
+            icon: uploading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.attach_file, size: 18),
+            label: Text(uploading ? 'Uploading…' : 'Add file'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.navy,
+              side: BorderSide(color: colors.border),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

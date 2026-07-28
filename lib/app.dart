@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/services/biometric_service.dart';
 import 'core/services/emergency_card_store.dart';
+import 'core/services/file_storage.dart';
 import 'core/services/secure_storage_service.dart';
 import 'core/services/theme_mode_store.dart';
 import 'core/theme/app_theme.dart';
@@ -28,6 +29,7 @@ class MediCarryApp extends StatelessWidget {
     required this.themeModeStore,
     required this.recordsRepository,
     required this.sharesRepository,
+    required this.fileStorage,
   });
 
   final AuthRepository authRepository;
@@ -38,6 +40,7 @@ class MediCarryApp extends StatelessWidget {
   final ThemeModeStore themeModeStore;
   final RecordsRepository recordsRepository;
   final SharesRepository sharesRepository;
+  final FileStorage fileStorage;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +54,7 @@ class MediCarryApp extends StatelessWidget {
         RepositoryProvider.value(value: themeModeStore),
         RepositoryProvider.value(value: recordsRepository),
         RepositoryProvider.value(value: sharesRepository),
+        RepositoryProvider.value(value: fileStorage),
       ],
       child: MultiBlocProvider(
         providers: [

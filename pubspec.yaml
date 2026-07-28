@@ -66,6 +66,14 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^5.2.3
   encrypt: ^5.0.3
+
+  # File storage on Cloudinary (Firebase Storage needs a paid bucket).
+  # Unsigned client uploads; picked with image_picker / file_picker, opened
+  # with url_launcher.
+  cloudinary_public: ^0.23.1
+  image_picker: ^1.1.2
+  file_picker: ^8.1.4
+  url_launcher: ^6.3.1
   # Directly referenced by share_crypto.dart for PBKDF2 (also pulled in by
   # `encrypt`); declared explicitly per the depend_on_referenced_packages lint.
   pointycastle: ^3.9.1
