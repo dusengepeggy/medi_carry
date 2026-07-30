@@ -35,6 +35,22 @@ class MediBottomNav extends StatelessWidget {
   final VoidCallback? onCards;
   final VoidCallback? onProfile;
 
+  /// Roughly how tall the bar is at the default text scale, excluding the
+  /// system's bottom inset.
+  ///
+  /// Only a starting estimate: the bar grows with the text scale, so anything
+  /// that needs to sit clear of it should use the measured height that
+  /// [AppShell] publishes rather than this. It exists so the first frame — and
+  /// screens rendered outside the shell — have a sane value.
+  static const estimatedHeight = 108.0;
+
+  /// [estimatedHeight] plus the system's bottom inset.
+  ///
+  /// Reads `viewPadding` rather than `padding` because Scaffold consumes the
+  /// latter for its body, which would zero the gesture inset here.
+  static double estimatedClearance(BuildContext context) =>
+      estimatedHeight + MediaQuery.viewPaddingOf(context).bottom;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -66,7 +82,7 @@ class MediBottomNav extends StatelessWidget {
               ),
               _Tab(
                 icon: AppAssets.navHistory,
-                label: 'History',
+                label: 'Records',
                 width: 21,
                 height: 21,
                 isActive: active == MediTab.history,

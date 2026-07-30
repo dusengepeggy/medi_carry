@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 
-import '../../../core/services/file_storage.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
@@ -12,6 +10,7 @@ import '../../auth/data/user_repository.dart';
 import '../../auth/models/patient_profile.dart';
 import '../widgets/edit_profile_fields.dart';
 import '../widgets/patient_avatar.dart';
+import 'profile_photo_actions.dart';
 
 /// Edit Profile — an implementation of the "Edit Profile" Figma frame
 /// (node 25:447).
@@ -43,7 +42,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _gender;
   String? _photoUrl;
   bool _isSaving = false;
-  bool _uploadingPhoto = false;
 
   @override
   void initState() {
@@ -60,30 +58,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _photoUrl = p.photoUrl;
   }
 
+  /// Delegates to the shared flow, which offers the camera as well as the
+  /// gallery and writes the photo straight to the profile — so it survives
+  /// backing out of this form without saving.
   Future<void> _pickPhoto() async {
-    final storage = context.read<FileStorage>();
-    if (!storage.isConfigured) {
-      _showMessage('Photo uploads are unavailable (Cloudinary not configured).',
-          isError: true);
-      return;
-    }
-    final picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1024,
-      imageQuality: 85,
+    final updated = await ProfilePhotoActions.change(
+      context,
+      uid: widget.profile.uid,
+      currentPhotoUrl: _photoUrl,
     );
-    if (picked == null) return;
-
-    setState(() => _uploadingPhoto = true);
-    try {
-      final stored =
-          await storage.upload(picked.path, folder: 'avatars', kind: 'image');
-      if (mounted) setState(() => _photoUrl = stored.url);
-    } on FileStorageException catch (e) {
-      if (mounted) _showMessage(e.message, isError: true);
-    } finally {
-      if (mounted) setState(() => _uploadingPhoto = false);
-    }
+    if (mounted) setState(() => _photoUrl = updated);
   }
 
   @override
@@ -201,7 +185,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               : _nameController.text.trim(),
                           patientId: widget.profile.patientId,
                           photoUrl: _photoUrl,
-                          uploading: _uploadingPhoto,
                           onChangePhoto: _pickPhoto,
                         ),
                         const SizedBox(height: 32),
@@ -366,14 +349,12 @@ class _PictureSection extends StatelessWidget {
     required this.name,
     required this.patientId,
     this.photoUrl,
-    this.uploading = false,
     this.onChangePhoto,
   });
 
   final String name;
   final String patientId;
   final String? photoUrl;
-  final bool uploading;
   final VoidCallback? onChangePhoto;
 
   @override
@@ -401,15 +382,13 @@ class _PictureSection extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: uploading
-                    ? const Center(child: CircularProgressIndicator())
-                    : PatientAvatar(photoUrl: photoUrl, size: 88),
+                child: PatientAvatar(photoUrl: photoUrl, size: 88),
               ),
               Positioned(
                 right: 0,
                 bottom: 0,
                 child: GestureDetector(
-                  onTap: uploading ? null : onChangePhoto,
+                  onTap: onChangePhoto,
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(

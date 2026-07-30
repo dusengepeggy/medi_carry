@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../../app/app_shell.dart';
 import '../../auth/bloc/auth/auth_bloc.dart';
 import '../bloc/cards_cubit.dart';
 import '../data/cards_repository.dart';
@@ -41,18 +42,23 @@ class _CardsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.canvas,
       extendBody: true,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openEditor(context),
-        backgroundColor: AppColors.indigoFinal,
-        foregroundColor: Colors.white,
-        elevation: 8,
-        icon: const Icon(Icons.add, size: 20),
-        label: Text(
-          'Add Card',
-          style: GoogleFonts.hankenGrotesk(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+      // Lifted clear of the shell's bottom bar, which is drawn over this
+      // screen rather than inside it.
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: AppShell.bottomBarClearance(context)),
+        child: FloatingActionButton.extended(
+          onPressed: () => _openEditor(context),
+          backgroundColor: AppColors.indigoFinal,
+          foregroundColor: Colors.white,
+          elevation: 8,
+          icon: const Icon(Icons.add, size: 20),
+          label: Text(
+            'Add Card',
+            style: GoogleFonts.hankenGrotesk(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
         ),
       ),
@@ -84,7 +90,14 @@ class _CardsView extends StatelessWidget {
 
             final expiring = state.valid.where((c) => c.expiresSoon).toList();
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 140),
+              // Clears the bottom bar and the FAB sitting above it, so the
+              // last card can always be scrolled into view.
+              padding: EdgeInsets.fromLTRB(
+                20,
+                16,
+                20,
+                AppShell.bottomBarClearance(context) + 88,
+              ),
               children: [
                 Text(
                   'My Cards',

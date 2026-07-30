@@ -12,6 +12,7 @@ import 'package:medi_carry/features/auth/models/app_user.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:medi_carry/features/auth/models/patient_profile.dart';
 import 'package:medi_carry/features/cards/view/cards_screen.dart';
+import 'package:medi_carry/features/dashboard/widgets/medi_bottom_nav.dart';
 import 'package:medi_carry/features/records/data/records_repository.dart';
 import 'package:medi_carry/features/share/data/shares_repository.dart';
 import 'package:medi_carry/features/dashboard/view/home_screen.dart';
@@ -164,5 +165,37 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
     // Home is the visible tab again — the nav bar still shows all four tabs.
     expect(find.text('Home'), findsOneWidget);
+  });
+
+  group('REGRESSION: a tab screen\'s add button clears the bottom bar', () {
+    // Tab screens sit inside the shell's `extendBody: true` body, so they are
+    // laid out against the full screen height and their FAB was drawn behind
+    // the bar rather than above it.
+    Future<void> expectFabAboveNav(WidgetTester tester, String label) async {
+      final fab = tester.getRect(find.widgetWithText(FloatingActionButton, label));
+      final nav = tester.getRect(find.byType(MediBottomNav));
+
+      expect(
+        fab.bottom,
+        lessThanOrEqualTo(nav.top),
+        reason: '"$label" overlaps the bottom nav bar',
+      );
+    }
+
+    testWidgets('on History', (tester) async {
+      await pumpShell(tester);
+      await tester.tap(find.text('History'));
+      await tester.pump();
+
+      await expectFabAboveNav(tester, 'Add Record');
+    });
+
+    testWidgets('on My Cards', (tester) async {
+      await pumpShell(tester);
+      await tester.tap(find.text('My Cards'));
+      await tester.pump();
+
+      await expectFabAboveNav(tester, 'Add Card');
+    });
   });
 }

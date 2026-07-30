@@ -26,6 +26,15 @@ class UserRepository {
   Future<void> updateProfile(PatientProfile profile) =>
       _users.doc(profile.uid).set(profile.toMap(), SetOptions(merge: true));
 
+  /// Writes just the photo, leaving every other field alone.
+  ///
+  /// A targeted write rather than a whole-profile merge for two reasons: the
+  /// photo is changed from screens that hold no other profile state, and
+  /// passing null here genuinely clears the field — which `copyWith` cannot
+  /// express, since a null argument there means "leave unchanged".
+  Future<void> updatePhotoUrl(String uid, String? photoUrl) =>
+      _users.doc(uid).set({'photoUrl': photoUrl}, SetOptions(merge: true));
+
   Future<PatientProfile?> fetchProfile(String uid) async {
     final snap = await _users.doc(uid).get();
     final data = snap.data();

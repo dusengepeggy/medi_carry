@@ -30,6 +30,21 @@ class AppShell extends StatefulWidget {
       .dependOnInheritedWidgetOfExactType<_AppShellScope>()
       ?.controller;
 
+  /// How far above the bottom of the screen a tab screen's own content has to
+  /// sit to clear the shell's bottom bar.
+  ///
+  /// Tab screens live inside the shell's `extendBody: true` body, so they are
+  /// laid out against the full screen height and know nothing about the bar
+  /// drawn over them — a floating action button placed without this ends up
+  /// behind it.
+  ///
+  /// Measured from the live bar rather than assumed, because its height grows
+  /// with the text scale. Falls back to an estimate when the screen is being
+  /// rendered outside a shell.
+  static double bottomBarClearance(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_AppShellScope>()?.barHeight ??
+      MediBottomNav.estimatedClearance(context);
+
   @override
   State<AppShell> createState() => _AppShellState();
 }
@@ -45,15 +60,19 @@ class _AppShellScope extends InheritedWidget {
   const _AppShellScope({
     required this.controller,
     required this.activeTab,
+    required this.barHeight,
     required super.child,
   });
 
   final AppShellController controller;
   final MediTab activeTab;
 
+  /// The measured height of the bottom bar, including the system inset.
+  final double barHeight;
+
   @override
   bool updateShouldNotify(_AppShellScope oldWidget) =>
-      activeTab != oldWidget.activeTab;
+      activeTab != oldWidget.activeTab || barHeight != oldWidget.barHeight;
 }
 
 class _AppShellState extends State<AppShell> {
@@ -68,7 +87,35 @@ class _AppShellState extends State<AppShell> {
     for (final tab in _tabs) tab: GlobalKey<NavigatorState>(),
   };
 
+  /// Measures the bottom bar so tab screens can lift their own content clear
+  /// of it. Its height is not a constant — it grows with the text scale.
+  final _barKey = GlobalKey();
+
+  double _barHeight = MediBottomNav.estimatedHeight;
+
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureBar());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-measure after a text-scale or inset change.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureBar());
+  }
+
+  void _measureBar() {
+    if (!mounted) return;
+    final box = _barKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final measured = box.size.height;
+    if ((measured - _barHeight).abs() < 0.5) return;
+    setState(() => _barHeight = measured);
+  }
 
   MediTab get _currentTab => _tabs[_index];
 
@@ -140,6 +187,7 @@ class _AppShellState extends State<AppShell> {
     return _AppShellScope(
       controller: AppShellController(goToTab: _onTabSelected),
       activeTab: _currentTab,
+      barHeight: _barHeight,
       child: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
@@ -159,6 +207,7 @@ class _AppShellState extends State<AppShell> {
             ],
           ),
           bottomNavigationBar: MediBottomNav(
+            key: _barKey,
             active: _currentTab,
             onHome: () => _onTabSelected(MediTab.home),
             onHistory: () => _onTabSelected(MediTab.history),

@@ -17,6 +17,7 @@ import '../widgets/appearance_toggle.dart';
 import '../widgets/patient_avatar.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/profile_option_card.dart';
+import 'profile_photo_actions.dart';
 
 /// User Profile — an implementation of the "User Profile" Figma frame
 /// (node 25:339).
@@ -63,9 +64,20 @@ class ProfileScreen extends StatelessWidget {
                             name: name,
                             patientId: profile?.patientId,
                             photoUrl: profile?.photoUrl,
-                            onEditPhoto: profile == null
+                            // The camera badge changes the photo here and
+                            // now. It used to open the whole Edit Profile
+                            // screen, where the patient had to find a second
+                            // camera badge to do the thing they had already
+                            // asked for. Enabled off the signed-in uid rather
+                            // than the profile document, so it still works
+                            // before that document exists.
+                            onEditPhoto: user.isEmpty
                                 ? null
-                                : () => _openEditProfile(context, profile),
+                                : () => ProfilePhotoActions.change(
+                                      context,
+                                      uid: user.uid,
+                                      currentPhotoUrl: profile?.photoUrl,
+                                    ),
                           ),
                           const SizedBox(height: 32),
                           _OptionsGrid(
