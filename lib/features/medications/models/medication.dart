@@ -146,6 +146,38 @@ class Medication extends Equatable {
     return nextDoseAfter(now);
   }
 
+  /// The next [limit] doses due strictly after [from], looking ahead up to a
+  /// week so a course with a gap still reports something.
+  ///
+  /// Used to show what follows the dose the patient is being prompted about —
+  /// so marking one as taken reveals the rest of the schedule rather than just
+  /// swapping one time for another.
+  List<DateTime> upcomingDoses(DateTime from, {int limit = 2}) {
+    if (times.isEmpty || !active || limit <= 0) return const [];
+    final sorted = [...times]..sort();
+    final upcoming = <DateTime>[];
+    for (var dayOffset = 0; dayOffset <= 7; dayOffset++) {
+      final day = from.add(Duration(days: dayOffset));
+      if (!isCurrentAt(day)) continue;
+      for (final time in sorted) {
+        final at = time.onDay(day);
+        if (!at.isAfter(from)) continue;
+        upcoming.add(at);
+        if (upcoming.length == limit) return upcoming;
+      }
+    }
+    return upcoming;
+  }
+
+  /// Whether a dose was marked as taken on the same calendar day as [now].
+  bool takenToday(DateTime now) {
+    final taken = lastTakenAt;
+    if (taken == null) return false;
+    return taken.year == now.year &&
+        taken.month == now.month &&
+        taken.day == now.day;
+  }
+
   /// A stable notification id for the dose at [timeIndex].
   ///
   /// Derived from the document id so the id survives app restarts, and kept

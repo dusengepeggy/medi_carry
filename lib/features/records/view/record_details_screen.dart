@@ -336,7 +336,9 @@ class _ActionButtons extends StatelessWidget {
           child: TextButton(
             onPressed: onPrint,
             style: TextButton.styleFrom(
-              backgroundColor: Colors.white,
+              // Was hardcoded white while the label followed the theme, so in
+              // dark mode this was light text on a white pill.
+              backgroundColor: context.colors.surface,
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 17),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
@@ -350,6 +352,12 @@ class _ActionButtons extends StatelessWidget {
                   AppAssets.detailPrint,
                   width: 16.667,
                   height: 15,
+                  // The exported glyph is dark ink; tinted so it survives the
+                  // dark surface too.
+                  colorFilter: ColorFilter.mode(
+                    context.colors.textPrimary,
+                    BlendMode.srcIn,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(

@@ -68,6 +68,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(state.copyWith(isBusy: false));
     } on AuthException catch (e) {
       emit(state.copyWith(isBusy: false, errorMessage: e.message));
+    } catch (error) {
+      // Anything the repository failed to translate still has to clear the
+      // busy flag, or the sign-in button spins for ever with no explanation.
+      emit(state.copyWith(
+        isBusy: false,
+        errorMessage: 'Google sign-in failed: $error',
+      ));
     }
   }
 

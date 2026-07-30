@@ -14,6 +14,7 @@ class SignUpState extends Equatable {
     this.chronicConditions = const [],
     this.enableBiometric = false,
     this.pin,
+    this.existingUid,
     this.errorMessage,
   });
 
@@ -23,6 +24,15 @@ class SignUpState extends Equatable {
   final String fullName;
   final String email;
   final String password;
+
+  /// Set when the wizard is completing onboarding for a user who is already
+  /// authenticated (Google). Null for a normal email sign-up, where the
+  /// account is created by [SignUpCubit.submit] itself.
+  final String? existingUid;
+
+  /// True when this run is finishing a Google sign-in rather than creating an
+  /// account from scratch.
+  bool get isOnboardingExistingUser => existingUid != null;
 
   // Step 2 — medical profile.
   final String? bloodType;
@@ -40,6 +50,14 @@ class SignUpState extends Equatable {
       email.trim().contains('@') &&
       password.length >= 8;
 
+  /// Whether the account half of the wizard is satisfied.
+  ///
+  /// An onboarding run has no password to validate — the identity already
+  /// exists — so it only needs the name and email Google supplied.
+  bool get isAccountReady => isOnboardingExistingUser
+      ? fullName.trim().isNotEmpty && email.trim().contains('@')
+      : isStep1Valid;
+
   SignUpState copyWith({
     SignUpStatus? status,
     String? fullName,
@@ -50,6 +68,7 @@ class SignUpState extends Equatable {
     List<String>? chronicConditions,
     bool? enableBiometric,
     String? pin,
+    String? existingUid,
     String? errorMessage,
   }) =>
       SignUpState(
@@ -62,6 +81,7 @@ class SignUpState extends Equatable {
         chronicConditions: chronicConditions ?? this.chronicConditions,
         enableBiometric: enableBiometric ?? this.enableBiometric,
         pin: pin ?? this.pin,
+        existingUid: existingUid ?? this.existingUid,
         errorMessage: errorMessage,
       );
 
@@ -76,6 +96,7 @@ class SignUpState extends Equatable {
         chronicConditions,
         enableBiometric,
         pin,
+        existingUid,
         errorMessage,
       ];
 }

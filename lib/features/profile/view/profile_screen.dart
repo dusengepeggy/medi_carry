@@ -88,6 +88,7 @@ class ProfileScreen extends StatelessWidget {
                                 AppShell.of(context)?.goToTab(MediTab.cards),
                             onNotificationSettings: () =>
                                 AppNav.openMedications(context),
+                            onSecurity: () => AppNav.openSecuritySettings(context),
                           ),
                           const SizedBox(height: 16),
                           const AppearanceToggle(),
@@ -178,6 +179,7 @@ class _OptionsGrid extends StatelessWidget {
     this.onPersonalInformation,
     this.onHealthInsurance,
     this.onNotificationSettings,
+    this.onSecurity,
   });
 
   /// Null until the patient's profile has loaded, since Edit Profile needs it.
@@ -185,6 +187,7 @@ class _OptionsGrid extends StatelessWidget {
 
   final VoidCallback? onHealthInsurance;
   final VoidCallback? onNotificationSettings;
+  final VoidCallback? onSecurity;
 
   @override
   Widget build(BuildContext context) {
@@ -217,12 +220,13 @@ class _OptionsGrid extends StatelessWidget {
           onTap: onNotificationSettings,
         ),
         const SizedBox(height: 16),
-        const ProfileOptionCard(
+        ProfileOptionCard(
           icon: AppAssets.profileSecurity,
-          iconSize: Size(16, 21),
+          iconSize: const Size(16, 21),
           accent: AppColors.danger,
           title: 'Security',
-          description: 'Password, FaceID, and data privacy',
+          description: 'App-lock PIN and biometric unlock',
+          onTap: onSecurity,
         ),
       ],
     );
@@ -257,7 +261,10 @@ class _SignOutButton extends StatelessWidget {
                 fontSize: 16,
                 height: 24 / 16,
                 fontWeight: FontWeight.w700,
-                color: context.colors.canvas,
+                // The button is navy in both modes, so the label is white in
+                // both. It used to follow `canvas`, which goes near-black in
+                // dark and vanished into the button.
+                color: Colors.white,
               ),
             ),
           ],

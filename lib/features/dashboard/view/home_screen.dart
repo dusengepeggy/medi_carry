@@ -118,7 +118,7 @@ class _DashboardViewState extends State<_DashboardView> {
                     ),
                     const SizedBox(height: 24),
                     const SizedBox(height: 8),
-                    _NextMedication(now: _now),
+                    const _NextMedication(),
                     const SizedBox(height: 16),
                     const _LatestVitals(),
                     const SizedBox(height: 16),
@@ -147,10 +147,34 @@ class _DashboardViewState extends State<_DashboardView> {
 
 /// The hero card: the dose the patient should take next, straight from their
 /// medication schedule.
-class _NextMedication extends StatelessWidget {
-  const _NextMedication({required this.now});
+///
+/// Owns its own one-second ticker rather than leaning on the dashboard's
+/// minute tick, so the countdown is live to the second — and so the rest of
+/// the page is not rebuilt once a second to achieve it.
+class _NextMedication extends StatefulWidget {
+  const _NextMedication();
 
-  final DateTime now;
+  @override
+  State<_NextMedication> createState() => _NextMedicationState();
+}
+
+class _NextMedicationState extends State<_NextMedication> {
+  Timer? _ticker;
+  DateTime _now = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
 
   Future<void> _markTaken(BuildContext context, Medication medication) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -169,6 +193,7 @@ class _NextMedication extends StatelessWidget {
         if (state.status == MedicationsStatus.loading) {
           return const _PlaceholderCard(height: 220);
         }
+        final now = _now;
         final medication = state.nextDue(now);
         if (medication == null) {
           return _EmptyHeroCard(
@@ -190,6 +215,13 @@ class _NextMedication extends StatelessWidget {
                 if (medication.instructions.isNotEmpty) medication.instructions,
               ].join(' - '),
               dueLabel: due == null ? 'Scheduled' : _dueLabel(due, now),
+              // What comes after the dose being prompted for, so marking one
+              // as taken reveals the rest of the day rather than just
+              // swapping one time for another.
+              scheduleLabel: _scheduleLabel(medication, due ?? now),
+              takenLabel: medication.takenToday(now)
+                  ? 'Taken ${_clock(medication.lastTakenAt!)}'
+                  : null,
               onMarkTaken: () => _markTaken(context, medication),
               onManage: () => AppNav.openMedications(context),
             ),
@@ -209,17 +241,37 @@ class _NextMedication extends StatelessWidget {
     );
   }
 
-  /// "Due now" / "In 45 min" / "In 2 hours" / "Tomorrow, 8:00 AM".
+  /// The live countdown to [due].
+  ///
+  /// Minute precision most of the time, dropping to seconds inside the last
+  /// five minutes — close to a dose the patient is watching the number, and a
+  /// label that only moved once a minute read as frozen.
   static String _dueLabel(DateTime due, DateTime now) {
     final delta = due.difference(now);
-    if (delta.isNegative || delta.inMinutes < 1) return 'Due now';
-    if (delta.inMinutes < 60) return 'In ${delta.inMinutes} min';
-    if (due.day == now.day) {
+    if (delta.isNegative || delta.inSeconds < 1) return 'Due now';
+    if (delta.inMinutes < 5) {
+      final m = delta.inMinutes;
+      final s = delta.inSeconds % 60;
+      return m == 0 ? 'In ${s}s' : 'In ${m}m ${s.toString().padLeft(2, '0')}s';
+    }
+    if (delta.inHours < 1) return 'In ${delta.inMinutes} min';
+    if (delta.inHours < 24) {
       final h = delta.inHours;
-      return 'In $h ${h == 1 ? 'hour' : 'hours'}';
+      final m = delta.inMinutes % 60;
+      return m == 0 ? 'In ${h}h' : 'In ${h}h ${m}m';
     }
     return 'Tomorrow, ${DoseTime(due.hour, due.minute).label}';
   }
+
+  /// "Then 2:00 PM · 8:00 PM" — the doses that follow [after].
+  static String? _scheduleLabel(Medication medication, DateTime after) {
+    final upcoming = medication.upcomingDoses(after);
+    if (upcoming.isEmpty) return null;
+    return 'Then ${upcoming.map(_clock).join(' · ')}';
+  }
+
+  /// A dose time as a wall clock, e.g. "8:00 PM".
+  static String _clock(DateTime at) => DoseTime(at.hour, at.minute).label;
 }
 
 /// Shown when doses are scheduled but the OS will not let the app announce

@@ -100,7 +100,7 @@ void main() {
     await pumpShell(tester);
 
     expect(find.text('Home'), findsOneWidget);
-    expect(find.text('History'), findsOneWidget);
+    expect(find.text('Records'), findsOneWidget);
     expect(find.text('My Cards'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
 
@@ -110,7 +110,7 @@ void main() {
   testWidgets('switching tabs swaps the visible screen', (tester) async {
     await pumpShell(tester);
 
-    await tester.tap(find.text('History'));
+    await tester.tap(find.text('Records'));
     await tester.pump();
     expect(find.byType(MedicalRecordsScreen), findsOneWidget);
 
@@ -131,7 +131,7 @@ void main() {
     // Previously each tab tap was a Navigator.push, so this loop would stack
     // ~8 routes and leave duplicate screens alive.
     for (var i = 0; i < 4; i++) {
-      await tester.tap(find.text('History'));
+      await tester.tap(find.text('Records'));
       await tester.pump();
       await tester.tap(find.text('Profile'));
       await tester.pump();
@@ -182,9 +182,9 @@ void main() {
       );
     }
 
-    testWidgets('on History', (tester) async {
+    testWidgets('on Records', (tester) async {
       await pumpShell(tester);
-      await tester.tap(find.text('History'));
+      await tester.tap(find.text('Records'));
       await tester.pump();
 
       await expectFabAboveNav(tester, 'Add Record');

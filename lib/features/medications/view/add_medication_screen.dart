@@ -336,7 +336,8 @@ class _DoseTimes extends StatelessWidget {
           icon: const Icon(Icons.add, size: 18),
           label: const Text('Add time'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.navy,
+            // Reads in both modes; navy disappeared against the dark canvas.
+            foregroundColor: colors.textPrimary,
             side: BorderSide(color: colors.border),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(999),

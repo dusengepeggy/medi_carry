@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/config/env.dart';
@@ -121,7 +122,35 @@ class AuthRepository {
       return kIsWeb ? await _signInWithGoogleWeb() : await _signInWithGoogleNative();
     } on FirebaseAuthException catch (e) {
       throw AuthException(_messageFor(e));
+    } on PlatformException catch (e) {
+      // Google Play Services rejects the sign-in *before* Firebase is ever
+      // reached, so these never surface as a FirebaseAuthException. Left
+      // untranslated they escaped as a raw PlatformException, which no caller
+      // catches — leaving the button spinning with nothing said.
+      throw AuthException(_messageForPlatform(e));
     }
+  }
+
+  /// Turns a google_sign_in [PlatformException] into something a person can
+  /// act on. The codes arrive nested in the message as
+  /// `ApiException: <n>`, so both the code and the text are inspected.
+  static String _messageForPlatform(PlatformException e) {
+    final detail = '${e.code} ${e.message ?? ''}';
+    if (detail.contains('12501') || e.code == 'sign_in_canceled') {
+      return 'Google sign-in was cancelled.';
+    }
+    if (detail.contains('ApiException: 7') || e.code == 'network_error') {
+      return 'Network error during Google sign-in. Check your connection and '
+          'try again.';
+    }
+    if (detail.contains('ApiException: 10')) {
+      return 'Google rejected this app (DEVELOPER_ERROR). The Android package '
+          'name and signing SHA-1 must both be registered on the same app in '
+          'the Firebase console.';
+    }
+    return e.message?.trim().isNotEmpty ?? false
+        ? 'Google sign-in failed: ${e.message}'
+        : 'Google sign-in failed. Please try again.';
   }
 
   Future<AppUser> _signInWithGoogleWeb() async {

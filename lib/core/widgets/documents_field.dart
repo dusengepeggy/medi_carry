@@ -73,7 +73,9 @@ class DocumentsField extends StatelessWidget {
                 : const Icon(Icons.attach_file, size: 18),
             label: Text(uploading ? 'Uploading…' : addLabel),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.navy,
+              // Navy on the dark canvas was almost invisible; the primary
+              // text role reads in both modes.
+              foregroundColor: colors.textPrimary,
               side: BorderSide(color: colors.border),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(

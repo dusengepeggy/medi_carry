@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../app/app_shell.dart';
+import '../../profile/bloc/profile_cubit.dart';
 import '../bloc/app_lock/app_lock_cubit.dart';
 import '../bloc/auth/auth_bloc.dart';
 import 'lock_screen.dart';
 import 'login_screen.dart';
+import 'sign_up_flow.dart';
 
 /// Top-level router that renders the right surface from the combined auth +                 → clear lock
 class AuthGate extends StatefulWidget {
@@ -49,12 +51,28 @@ class _AuthGateState extends State<AuthGate> {
             case AuthStatus.unauthenticated:
               return const LoginScreen();
             case AuthStatus.authenticated:
-              return BlocBuilder<AppLockCubit, AppLockState>(
-                builder: (context, lockState) {
-                  if (lockState.status == LockStatus.locked) {
-                    return const LockScreen();
+              return BlocBuilder<ProfileCubit, ProfileState>(
+                builder: (context, profileState) {
+                  // Google hands back an identity and nothing else — no
+                  // profile document, and no app-lock PIN. Finish the same
+                  // steps a manual sign-up completes before letting the
+                  // patient into an app that would otherwise have no patient
+                  // ID, no medical profile, and no offline lock.
+                  //
+                  // Gated on `ready` so a cold start does not flash the wizard
+                  // while the profile is still resolving.
+                  if (profileState.status == ProfileStatus.ready &&
+                      profileState.needsOnboarding) {
+                    return SignUpFlow.onboarding(user: authState.user);
                   }
-                  return const AppShell();
+                  return BlocBuilder<AppLockCubit, AppLockState>(
+                    builder: (context, lockState) {
+                      if (lockState.status == LockStatus.locked) {
+                        return const LockScreen();
+                      }
+                      return const AppShell();
+                    },
+                  );
                 },
               );
           }

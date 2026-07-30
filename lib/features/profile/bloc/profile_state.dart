@@ -14,6 +14,20 @@ class ProfileState extends Equatable {
   /// The patient's photo, or null for the placeholder avatar.
   String? get photoUrl => profile?.photoUrl;
 
+  /// Whether this account still has to go through the profile + security
+  /// steps that manual sign-up performs.
+  ///
+  /// True when there is no profile document at all (a Google sign-in, which
+  /// creates a Firebase user and nothing else), and also when one exists
+  /// without a patient ID — which is what an account created before this
+  /// onboarding step existed looks like, so those get repaired rather than
+  /// left half-configured.
+  ///
+  /// Only meaningful once [status] is [ProfileStatus.ready]; while loading it
+  /// reports true simply because nothing has arrived yet.
+  bool get needsOnboarding =>
+      profile == null || profile!.patientId.trim().isEmpty;
+
   /// The best name available, falling back through the profile document.
   String? get fullName {
     final name = profile?.fullName.trim();

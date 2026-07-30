@@ -40,6 +40,7 @@ class AppLockCubit extends Cubit<AppLockState> {
       status: isPinSet ? LockStatus.locked : LockStatus.unlocked,
       isPinSet: isPinSet,
       isBiometricEnabled: isBiometricEnabled,
+      isBiometricAvailable: await _biometric.isAvailable(),
     ));
   }
 
@@ -51,7 +52,79 @@ class AppLockCubit extends Cubit<AppLockState> {
       status: LockStatus.unlocked,
       isPinSet: isPinSet,
       isBiometricEnabled: isBiometricEnabled,
+      isBiometricAvailable: await _biometric.isAvailable(),
     ));
+  }
+
+  /// Re-reads the stored lock settings without changing the lock status.
+  /// Used by the security settings screen when it opens.
+  Future<void> refresh() async {
+    emit(state.copyWith(
+      isPinSet: await _secureStorage.hasPin(),
+      isBiometricEnabled: await _secureStorage.isBiometricEnabled(),
+      isBiometricAvailable: await _biometric.isAvailable(),
+    ));
+  }
+
+  /// Sets the app-lock PIN for an account that has none — accounts created
+  /// before the security step existed, which would otherwise have no way to
+  /// ever turn the lock on.
+  Future<void> setPin(String pin) async {
+    await _secureStorage.setPin(pin);
+    emit(state.copyWith(isPinSet: true));
+  }
+
+  /// Replaces the PIN, but only on proof of the current one.
+  ///
+  /// Returns false when [currentPin] is wrong — without this check anyone
+  /// holding an unlocked phone could lock the owner out of their own records.
+  Future<bool> changePin({
+    required String currentPin,
+    required String newPin,
+  }) async {
+    if (!await _secureStorage.verifyPin(currentPin)) {
+      emit(state.copyWith(errorMessage: 'That is not your current PIN.'));
+      return false;
+    }
+    await _secureStorage.setPin(newPin);
+    emit(state.copyWith(isPinSet: true));
+    return true;
+  }
+
+  /// Turns biometric unlock on, proving it works before storing the choice.
+  ///
+  /// Requires a PIN: the biometric is a shortcut past the PIN, never a
+  /// replacement for it — a failed or unenrolled scanner must still leave the
+  /// patient a way in.
+  Future<bool> enableBiometric() async {
+    if (!state.isPinSet) {
+      emit(state.copyWith(
+        errorMessage: 'Set a PIN first — it is the fallback if a scan fails.',
+      ));
+      return false;
+    }
+    if (!await _biometric.isAvailable()) {
+      emit(state.copyWith(
+        errorMessage: 'This device has no biometric or screen lock set up.',
+        isBiometricAvailable: false,
+      ));
+      return false;
+    }
+    final confirmed = await _biometric.authenticate(
+      reason: 'Confirm your identity to enable biometric unlock',
+    );
+    if (!confirmed) {
+      emit(state.copyWith(errorMessage: 'Biometric check failed.'));
+      return false;
+    }
+    await _secureStorage.setBiometricEnabled(true);
+    emit(state.copyWith(isBiometricEnabled: true, isBiometricAvailable: true));
+    return true;
+  }
+
+  Future<void> disableBiometric() async {
+    await _secureStorage.setBiometricEnabled(false);
+    emit(state.copyWith(isBiometricEnabled: false));
   }
 
   /// Re-lock (e.g. when the app is resumed after being backgrounded).

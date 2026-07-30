@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../features/auth/models/patient_profile.dart';
+import '../features/auth/view/security_settings_screen.dart';
 import '../features/emergency/view/emergency_info_screen.dart';
 import '../features/medications/bloc/medications_cubit.dart';
 import '../features/medications/view/medications_screen.dart';
@@ -70,6 +71,15 @@ abstract final class AppNav {
       ),
     );
   }
+
+  /// The app-lock settings: PIN and biometric unlock. Root-pushed because it
+  /// is a focused task, and it can lock the app from under itself.
+  static Future<void> openSecuritySettings(BuildContext context) =>
+      Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const SecuritySettingsScreen(),
+        ),
+      );
 
   static Future<void> openAddRecord(BuildContext context) =>
       Navigator.of(context, rootNavigator: true).push(

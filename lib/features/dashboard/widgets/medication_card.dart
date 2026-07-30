@@ -12,6 +12,8 @@ class MedicationCard extends StatelessWidget {
     required this.name,
     required this.dosage,
     required this.dueLabel,
+    this.scheduleLabel,
+    this.takenLabel,
     this.onMarkTaken,
     this.onManage,
   });
@@ -22,8 +24,16 @@ class MedicationCard extends StatelessWidget {
   /// e.g. "10mg - Take with food".
   final String dosage;
 
-  /// e.g. "In 2 hours".
+  /// e.g. "In 2h 14m". Counts down live.
   final String dueLabel;
+
+  /// What follows this dose, e.g. "Then 2:00 PM · 8:00 PM". Null when the
+  /// course has nothing else scheduled.
+  final String? scheduleLabel;
+
+  /// e.g. "Taken 9:04 AM" — shown once today's dose has been marked, so the
+  /// card confirms the action instead of silently moving on.
+  final String? takenLabel;
 
   final VoidCallback? onMarkTaken;
 
@@ -150,6 +160,49 @@ class MedicationCard extends StatelessWidget {
               color: AppColors.limeOnSurface.withValues(alpha: 0.8),
             ),
           ),
+          if (takenLabel != null || scheduleLabel != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (takenLabel != null) ...[
+                  Icon(
+                    Icons.check_circle,
+                    size: 15,
+                    color: AppColors.limeOnSurface.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    takenLabel!,
+                    style: GoogleFonts.hankenGrotesk(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.limeOnSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  if (scheduleLabel != null)
+                    Text(
+                      '  ·  ',
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 13,
+                        color: AppColors.limeOnSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                ],
+                if (scheduleLabel != null)
+                  Expanded(
+                    child: Text(
+                      scheduleLabel!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 13,
+                        color: AppColors.limeOnSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,

@@ -215,6 +215,15 @@ class _CenterAction extends StatelessWidget {
                     AppAssets.navScan,
                     width: 23.333,
                     height: 23.333,
+                    // The button itself turns lime in dark mode, so the
+                    // glyph's own light fill would disappear into it. Tinted
+                    // to the deep green that reads against lime.
+                    colorFilter: isDark
+                        ? const ColorFilter.mode(
+                            AppColors.olive,
+                            BlendMode.srcIn,
+                          )
+                        : null,
                   ),
                 ),
               ),
