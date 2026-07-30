@@ -13,6 +13,7 @@ class MedicationCard extends StatelessWidget {
     required this.dosage,
     required this.dueLabel,
     this.onMarkTaken,
+    this.onManage,
   });
 
   /// e.g. "Lisinopril".
@@ -26,8 +27,20 @@ class MedicationCard extends StatelessWidget {
 
   final VoidCallback? onMarkTaken;
 
+  /// Opens the full regimen. The card shows one dose; without this the rest of
+  /// the schedule — and the reminder switches — had no route from the
+  /// dashboard once a medication existed.
+  final VoidCallback? onManage;
+
   @override
   Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onManage,
+      child: _card(context),
+    );
+  }
+
+  Widget _card(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),

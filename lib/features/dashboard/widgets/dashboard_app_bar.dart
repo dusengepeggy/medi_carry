@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../profile/widgets/patient_avatar.dart';
 
 /// Top app bar from the Dashboard (Final) design: avatar, wordmark, search.
 class DashboardAppBar extends StatelessWidget {
@@ -40,15 +41,7 @@ class DashboardAppBar extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: ClipOval(
-                      // Stand-in until patient profile photos are wired up.
-                      child: Image.asset(
-                        AppAssets.avatarPlaceholder,
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    child: const LivePatientAvatar(size: 48),
                   ),
                 ),
               ),

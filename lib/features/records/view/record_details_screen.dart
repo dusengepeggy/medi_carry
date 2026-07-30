@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:printing/printing.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../app/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../auth/bloc/auth/auth_bloc.dart';
+import '../../auth/data/user_repository.dart';
+import '../../auth/models/patient_profile.dart';
+import '../../share/data/records_pdf.dart';
 import '../models/medical_record.dart';
 import '../widgets/clinical_details_card.dart';
 import '../widgets/doctor_notes_card.dart';
@@ -17,6 +23,35 @@ class RecordDetailsScreen extends StatelessWidget {
   const RecordDetailsScreen({super.key, required this.record});
 
   final MedicalRecord record;
+
+  /// Renders this single record as a one-page PDF and hands it to the OS
+  /// print/share sheet — which is what "Print" means on a phone.
+  Future<void> _printRecord(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final uid = context.read<AuthBloc>().state.user.uid;
+    try {
+      final profile = uid.isEmpty
+          ? null
+          : await context.read<UserRepository>().fetchProfile(uid);
+      final bytes = await RecordsPdf.build(
+        profile: profile ??
+            const PatientProfile(
+              uid: '',
+              fullName: '',
+              email: '',
+              patientId: '—',
+            ),
+        records: [record],
+      );
+      await Printing.layoutPdf(onLayout: (_) async => bytes);
+    } catch (_) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Could not prepare the printout.')),
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +102,7 @@ class RecordDetailsScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     _ActionButtons(
                       onShare: () => AppNav.openShare(context),
-                      onPrint: () {},
+                      onPrint: () => _printRecord(context),
                     ),
                   ],
                 ),

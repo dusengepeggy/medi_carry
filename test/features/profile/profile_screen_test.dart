@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medi_carry/core/theme/app_theme.dart';
-import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/core/services/emergency_card_store.dart';
 import 'package:medi_carry/core/services/theme_mode_store.dart';
@@ -12,6 +11,8 @@ import 'package:medi_carry/features/auth/models/app_user.dart';
 import 'package:medi_carry/features/auth/models/patient_profile.dart';
 import 'package:medi_carry/features/profile/view/profile_screen.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../support/test_providers.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -72,12 +73,14 @@ void main() {
           RepositoryProvider<EmergencyCardStore>.value(
               value: emergencyCardStore),
         ],
-        child: MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => AuthBloc(authRepository: authRepository)),
-            BlocProvider(create: (_) => ThemeCubit(store: themeModeStore)),
-          ],
-          child: MaterialApp(theme: AppTheme.light, home: const ProfileScreen()),
+        child: withMediBlocs(
+          authRepository: authRepository,
+          userRepository: userRepository,
+          child: BlocProvider(
+            create: (_) => ThemeCubit(store: themeModeStore),
+            child:
+                MaterialApp(theme: AppTheme.light, home: const ProfileScreen()),
+          ),
         ),
       ),
     );
@@ -101,7 +104,7 @@ void main() {
     expect(find.text('Personal Information'), findsOneWidget);
     expect(find.text('Update your name, age, and records'), findsOneWidget);
     expect(find.text('Health Insurance'), findsOneWidget);
-    expect(find.text('Notification Settings'), findsOneWidget);
+    expect(find.text('Medication Reminders'), findsOneWidget);
     expect(find.text('Security'), findsOneWidget);
     expect(find.text('Password, FaceID, and data privacy'), findsOneWidget);
   });

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medi_carry/core/theme/app_theme.dart';
-import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/data/user_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
@@ -11,6 +10,8 @@ import 'package:medi_carry/features/records/data/records_repository.dart';
 import 'package:medi_carry/features/share/data/shares_repository.dart';
 import 'package:medi_carry/features/share/view/share_records_screen.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../support/test_providers.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -45,8 +46,9 @@ void main() {
           RepositoryProvider<SharesRepository>.value(
               value: SharesRepository(firestore: firestore)),
         ],
-        child: BlocProvider(
-          create: (_) => AuthBloc(authRepository: authRepository),
+        child: withMediBlocs(
+          authRepository: authRepository,
+          userRepository: fakeUserRepository(firestore),
           child: MaterialApp(
             theme: AppTheme.light,
             home: const ShareRecordsScreen(),

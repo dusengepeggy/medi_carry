@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../core/models/stored_attachment.dart';
 import '../../../core/theme/app_assets.dart';
 import '../widgets/record_card.dart';
 
@@ -57,32 +58,10 @@ enum RecordCategory {
 }
 
 /// A file attached to a record — an image or PDF stored on Cloudinary.
-class RecordAttachment extends Equatable {
-  const RecordAttachment({
-    required this.url,
-    required this.name,
-    required this.kind,
-  });
-
-  final String url;
-  final String name;
-
-  /// 'image', 'pdf', or 'raw'.
-  final String kind;
-
-  bool get isImage => kind == 'image';
-
-  Map<String, dynamic> toMap() => {'url': url, 'name': name, 'kind': kind};
-
-  factory RecordAttachment.fromMap(Map<String, dynamic> map) => RecordAttachment(
-        url: map['url'] as String? ?? '',
-        name: map['name'] as String? ?? 'Attachment',
-        kind: map['kind'] as String? ?? 'raw',
-      );
-
-  @override
-  List<Object?> get props => [url, name, kind];
-}
+///
+/// The same shape backs insurance-card documents, so the storage model lives
+/// in `core` and this name is the records-side alias for it.
+typedef RecordAttachment = StoredAttachment;
 
 /// A patient's medical record, stored at Firestore `users/{uid}/records/{id}`.
 class MedicalRecord extends Equatable {

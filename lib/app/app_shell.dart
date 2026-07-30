@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../core/services/notification_service.dart';
+import '../features/auth/bloc/auth/auth_bloc.dart';
 import '../features/cards/view/cards_screen.dart';
 import '../features/dashboard/view/home_screen.dart';
 import '../features/dashboard/widgets/medi_bottom_nav.dart';
+import '../features/medications/bloc/medications_cubit.dart';
+import '../features/medications/data/medications_repository.dart';
 import '../features/profile/view/profile_screen.dart';
 import '../features/records/view/medical_records_screen.dart';
 import '../features/share/view/share_records_screen.dart';
@@ -115,6 +120,23 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final uid = context.select((AuthBloc b) => b.state.user.uid);
+    // Provided at the shell rather than per-screen so the dashboard's "next
+    // dose" card and the medications screen share one subscription — and so
+    // reminders are (re)scheduled as soon as the patient is signed in,
+    // wherever they happen to land.
+    return BlocProvider(
+      key: ValueKey(uid),
+      create: (_) => MedicationsCubit(
+        repository: context.read<MedicationsRepository>(),
+        notifications: context.read<NotificationService>(),
+        uid: uid,
+      ),
+      child: _buildShell(context),
+    );
+  }
+
+  Widget _buildShell(BuildContext context) {
     return _AppShellScope(
       controller: AppShellController(goToTab: _onTabSelected),
       activeTab: _currentTab,

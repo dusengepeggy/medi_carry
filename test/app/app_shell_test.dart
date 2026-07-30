@@ -6,7 +6,6 @@ import 'package:medi_carry/core/services/emergency_card_store.dart';
 import 'package:medi_carry/core/services/theme_mode_store.dart';
 import 'package:medi_carry/core/theme/theme_cubit.dart';
 import 'package:medi_carry/core/theme/app_theme.dart';
-import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/data/user_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
@@ -18,7 +17,12 @@ import 'package:medi_carry/features/share/data/shares_repository.dart';
 import 'package:medi_carry/features/dashboard/view/home_screen.dart';
 import 'package:medi_carry/features/profile/view/profile_screen.dart';
 import 'package:medi_carry/features/records/view/medical_records_screen.dart';
+import 'package:medi_carry/core/services/notification_service.dart';
+import 'package:medi_carry/features/cards/data/cards_repository.dart';
+import 'package:medi_carry/features/medications/data/medications_repository.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../support/test_providers.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -68,13 +72,22 @@ void main() {
               value: RecordsRepository(firestore: FakeFirebaseFirestore())),
           RepositoryProvider<SharesRepository>.value(
               value: SharesRepository(firestore: FakeFirebaseFirestore())),
+          RepositoryProvider<MedicationsRepository>.value(
+              value: MedicationsRepository(firestore: FakeFirebaseFirestore())),
+          RepositoryProvider<CardsRepository>.value(
+              value: CardsRepository(firestore: FakeFirebaseFirestore())),
+          // Never initialised, so every scheduling call is a no-op — the
+          // widget tests must not reach the notifications platform channel.
+          RepositoryProvider<NotificationService>.value(
+              value: NotificationService()),
         ],
-        child: MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => AuthBloc(authRepository: authRepository)),
-            BlocProvider(create: (_) => ThemeCubit(store: MockThemeModeStore())),
-          ],
-          child: MaterialApp(theme: AppTheme.light, home: const AppShell()),
+        child: withMediBlocs(
+          authRepository: authRepository,
+          userRepository: userRepository,
+          child: BlocProvider(
+            create: (_) => ThemeCubit(store: MockThemeModeStore()),
+            child: MaterialApp(theme: AppTheme.light, home: const AppShell()),
+          ),
         ),
       ),
     );

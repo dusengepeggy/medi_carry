@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../profile/widgets/patient_avatar.dart';
 
 /// Translucent top app bar from the Share Records (Final) design: avatar,
 /// greeting, and a notifications action.
@@ -58,15 +59,7 @@ class ShareAppBar extends StatelessWidget {
                                   color: context.colors.border,
                                   shape: BoxShape.circle,
                                 ),
-                                child: ClipOval(
-                                  // Stand-in until profile photos are wired up.
-                                  child: Image.asset(
-                                    AppAssets.avatarPlaceholder,
-                                    width: 40,
-                                    height: 40,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
+                                child: const LivePatientAvatar(size: 40),
                               ),
                             ),
                             const SizedBox(width: 16),

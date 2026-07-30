@@ -29,4 +29,24 @@ class SharesRepository {
 
   Future<void> revoke(String uid, String id) =>
       _shares(uid).doc(id).update({'revoked': true});
+
+  /// Revokes every grant that is still live — the patient's panic button when
+  /// they no longer know who holds a code.
+  ///
+  /// Written as one batch so the list never ends up half-revoked if the
+  /// connection drops midway.
+  Future<int> revokeAllActive(String uid) async {
+    final snapshot = await _shares(uid).get();
+    final live = snapshot.docs.where(
+      (doc) => ShareGrant.fromMap(doc.id, doc.data()).isActive,
+    );
+    if (live.isEmpty) return 0;
+
+    final batch = _firestore.batch();
+    for (final doc in live) {
+      batch.update(doc.reference, {'revoked': true});
+    }
+    await batch.commit();
+    return live.length;
+  }
 }

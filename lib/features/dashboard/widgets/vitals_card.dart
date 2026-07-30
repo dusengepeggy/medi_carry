@@ -12,7 +12,12 @@ class VitalsCard extends StatelessWidget {
     required this.reading,
     required this.unit,
     required this.trendLabel,
+    this.label = 'LATEST BP',
   });
+
+  /// The card's eyebrow, e.g. "LATEST BP". Comes from the record's title, so a
+  /// weight or blood-sugar record isn't mislabelled as a BP reading.
+  final String label;
 
   /// e.g. "118/76".
   final String reading;
@@ -53,14 +58,18 @@ class VitalsCard extends StatelessWidget {
                 height: 15.292,
               ),
               const SizedBox(width: 8),
-              Text(
-                'LATEST BP',
-                style: GoogleFonts.hankenGrotesk(
-                  fontSize: 14,
-                  height: 20 / 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.7,
-                  color: Colors.white.withValues(alpha: 0.8),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.hankenGrotesk(
+                    fontSize: 14,
+                    height: 20 / 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.7,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
                 ),
               ),
             ],

@@ -80,15 +80,21 @@ class _RecordsViewState extends State<_RecordsView> {
     return Scaffold(
       backgroundColor: context.colors.surfaceMuted,
       extendBody: true,
-      floatingActionButton: SizedBox(
-        width: 56,
-        height: 56,
-        child: FloatingActionButton(
-          onPressed: () => AppNav.openAddRecord(context),
-          backgroundColor: AppColors.indigoFinal,
-          elevation: 8,
-          shape: const CircleBorder(),
-          child: SvgPicture.asset(AppAssets.fabAdd, width: 14, height: 14),
+      // Labelled rather than an icon-only FAB: "add a record" is the primary
+      // job on this screen, and a bare glyph left patients hunting for it.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => AppNav.openAddRecord(context),
+        backgroundColor: AppColors.indigoFinal,
+        foregroundColor: Colors.white,
+        elevation: 8,
+        icon: SvgPicture.asset(AppAssets.fabAdd, width: 14, height: 14),
+        label: Text(
+          'Add Record',
+          style: GoogleFonts.hankenGrotesk(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
       ),
       body: Column(
