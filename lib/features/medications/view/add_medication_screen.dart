@@ -98,6 +98,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
 
     setState(() => _saving = true);
     final cubit = context.read<MedicationsCubit>();
+    // Captured before the screen pops, so the confirmation still shows.
+    final messenger = ScaffoldMessenger.of(context);
     final existing = widget.existing;
     final medication = Medication(
       id: existing?.id ?? '',
@@ -119,10 +121,30 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       } else {
         await cubit.add(medication);
       }
-      if (_remindersEnabled) await cubit.requestReminderPermission();
+      // Asked for here, at the moment the patient has said they want to be
+      // reminded — not at app start, where the request has no context. A
+      // refusal is reported, because a medication saved with reminders on but
+      // permission off would otherwise look armed and never fire.
+      final remindersReady =
+          !_remindersEnabled || await cubit.requestReminderPermission();
+
       if (!mounted) return;
       Navigator.of(context).pop();
-      _showMessage(_isEditing ? 'Medication updated' : 'Medication added');
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              remindersReady
+                  ? (_isEditing
+                      ? 'Medication updated — reminders set'
+                      : 'Medication added — reminders set')
+                  : 'Saved, but notifications are off, so no reminder will '
+                      'appear. Enable them for MediCarry in your phone '
+                      'settings.',
+            ),
+          ),
+        );
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);

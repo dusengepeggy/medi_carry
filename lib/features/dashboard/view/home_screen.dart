@@ -181,14 +181,29 @@ class _NextMedication extends StatelessWidget {
           );
         }
         final due = medication.dueDose(now);
-        return MedicationCard(
-          name: medication.name,
-          dosage: [
-            if (medication.dosage.isNotEmpty) medication.dosage,
-            if (medication.instructions.isNotEmpty) medication.instructions,
-          ].join(' - '),
-          dueLabel: due == null ? 'Scheduled' : _dueLabel(due, now),
-          onMarkTaken: () => _markTaken(context, medication),
+        return Column(
+          children: [
+            MedicationCard(
+              name: medication.name,
+              dosage: [
+                if (medication.dosage.isNotEmpty) medication.dosage,
+                if (medication.instructions.isNotEmpty) medication.instructions,
+              ].join(' - '),
+              dueLabel: due == null ? 'Scheduled' : _dueLabel(due, now),
+              onMarkTaken: () => _markTaken(context, medication),
+              onManage: () => AppNav.openMedications(context),
+            ),
+            // Only worth saying once the patient actually has doses to be
+            // reminded about.
+            if (!state.remindersPermitted) ...[
+              const SizedBox(height: 12),
+              _RemindersOffBanner(
+                onEnable: () => context
+                    .read<MedicationsCubit>()
+                    .requestReminderPermission(),
+              ),
+            ],
+          ],
         );
       },
     );
@@ -204,6 +219,59 @@ class _NextMedication extends StatelessWidget {
       return 'In $h ${h == 1 ? 'hour' : 'hours'}';
     }
     return 'Tomorrow, ${DoseTime(due.hour, due.minute).label}';
+  }
+}
+
+/// Shown when doses are scheduled but the OS will not let the app announce
+/// them — otherwise the patient is relying on reminders that cannot arrive.
+class _RemindersOffBanner extends StatelessWidget {
+  const _RemindersOffBanner({required this.onEnable});
+
+  final VoidCallback onEnable;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      decoration: BoxDecoration(
+        color: AppColors.warningSurface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.notifications_off_outlined,
+            size: 20,
+            color: AppColors.onWarningSurface,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Dose reminders are switched off for MediCarry.',
+              style: GoogleFonts.hankenGrotesk(
+                fontSize: 13,
+                height: 18 / 13,
+                color: AppColors.onWarningSurface,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onEnable,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.onWarningSurface,
+            ),
+            child: Text(
+              'Turn on',
+              style: GoogleFonts.hankenGrotesk(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onWarningSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

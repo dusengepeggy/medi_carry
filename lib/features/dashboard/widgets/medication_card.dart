@@ -119,6 +119,14 @@ class MedicationCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (onManage != null) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.limeOnSurface.withValues(alpha: 0.7),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 32), // 16 gap + 16 top margin

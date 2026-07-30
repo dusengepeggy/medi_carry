@@ -130,6 +130,19 @@ void main() {
     expect(find.text('Mark as Taken'), findsOneWidget);
   });
 
+  testWidgets('the medication card opens the full regimen', (tester) async {
+    await seedMedication();
+    await pumpDashboard(tester);
+
+    // Tapping the card is the only route to the rest of the schedule and the
+    // reminder switches once a medication exists.
+    await tester.tap(find.text('Lisinopril'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Medications'), findsOneWidget);
+    expect(find.text('Add'), findsOneWidget);
+  });
+
   testWidgets('prompts to add a medication when none are scheduled',
       (tester) async {
     await pumpDashboard(tester);
