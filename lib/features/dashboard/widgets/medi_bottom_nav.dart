@@ -35,6 +35,22 @@ class MediBottomNav extends StatelessWidget {
   final VoidCallback? onCards;
   final VoidCallback? onProfile;
 
+  /// Roughly how tall the bar is at the default text scale, excluding the
+  /// system's bottom inset.
+  ///
+  /// Only a starting estimate: the bar grows with the text scale, so anything
+  /// that needs to sit clear of it should use the measured height that
+  /// [AppShell] publishes rather than this. It exists so the first frame — and
+  /// screens rendered outside the shell — have a sane value.
+  static const estimatedHeight = 108.0;
+
+  /// [estimatedHeight] plus the system's bottom inset.
+  ///
+  /// Reads `viewPadding` rather than `padding` because Scaffold consumes the
+  /// latter for its body, which would zero the gesture inset here.
+  static double estimatedClearance(BuildContext context) =>
+      estimatedHeight + MediaQuery.viewPaddingOf(context).bottom;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -66,7 +82,7 @@ class MediBottomNav extends StatelessWidget {
               ),
               _Tab(
                 icon: AppAssets.navHistory,
-                label: 'History',
+                label: 'Records',
                 width: 21,
                 height: 21,
                 isActive: active == MediTab.history,
@@ -199,6 +215,15 @@ class _CenterAction extends StatelessWidget {
                     AppAssets.navScan,
                     width: 23.333,
                     height: 23.333,
+                    // The button itself turns lime in dark mode, so the
+                    // glyph's own light fill would disappear into it. Tinted
+                    // to the deep green that reads against lime.
+                    colorFilter: isDark
+                        ? const ColorFilter.mode(
+                            AppColors.olive,
+                            BlendMode.srcIn,
+                          )
+                        : null,
                   ),
                 ),
               ),

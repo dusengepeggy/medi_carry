@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/services/biometric_service.dart';
 import 'core/services/emergency_card_store.dart';
+import 'core/services/file_storage.dart';
+import 'core/services/notification_service.dart';
 import 'core/services/secure_storage_service.dart';
 import 'core/services/theme_mode_store.dart';
 import 'core/theme/app_theme.dart';
@@ -12,6 +14,9 @@ import 'features/auth/bloc/auth/auth_bloc.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/data/user_repository.dart';
 import 'features/auth/view/auth_gate.dart';
+import 'features/cards/data/cards_repository.dart';
+import 'features/medications/data/medications_repository.dart';
+import 'features/profile/bloc/profile_cubit.dart';
 import 'features/records/data/records_repository.dart';
 import 'features/share/data/shares_repository.dart';
 
@@ -28,6 +33,10 @@ class MediCarryApp extends StatelessWidget {
     required this.themeModeStore,
     required this.recordsRepository,
     required this.sharesRepository,
+    required this.medicationsRepository,
+    required this.cardsRepository,
+    required this.fileStorage,
+    required this.notificationService,
   });
 
   final AuthRepository authRepository;
@@ -38,6 +47,10 @@ class MediCarryApp extends StatelessWidget {
   final ThemeModeStore themeModeStore;
   final RecordsRepository recordsRepository;
   final SharesRepository sharesRepository;
+  final MedicationsRepository medicationsRepository;
+  final CardsRepository cardsRepository;
+  final FileStorage fileStorage;
+  final NotificationService notificationService;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +64,10 @@ class MediCarryApp extends StatelessWidget {
         RepositoryProvider.value(value: themeModeStore),
         RepositoryProvider.value(value: recordsRepository),
         RepositoryProvider.value(value: sharesRepository),
+        RepositoryProvider.value(value: medicationsRepository),
+        RepositoryProvider.value(value: cardsRepository),
+        RepositoryProvider.value(value: fileStorage),
+        RepositoryProvider.value(value: notificationService),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -59,6 +76,14 @@ class MediCarryApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (_) => ThemeCubit(store: themeModeStore)..load(),
+          ),
+          // App-wide so every avatar and greeting follows the same profile
+          // document, live.
+          BlocProvider(
+            create: (_) => ProfileCubit(
+              authRepository: authRepository,
+              userRepository: userRepository,
+            ),
           ),
           BlocProvider(
             create: (_) => AppLockCubit(

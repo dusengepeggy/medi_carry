@@ -6,19 +6,24 @@ import 'package:medi_carry/core/services/emergency_card_store.dart';
 import 'package:medi_carry/core/services/theme_mode_store.dart';
 import 'package:medi_carry/core/theme/theme_cubit.dart';
 import 'package:medi_carry/core/theme/app_theme.dart';
-import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/data/user_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:medi_carry/features/auth/models/patient_profile.dart';
 import 'package:medi_carry/features/cards/view/cards_screen.dart';
+import 'package:medi_carry/features/dashboard/widgets/medi_bottom_nav.dart';
 import 'package:medi_carry/features/records/data/records_repository.dart';
 import 'package:medi_carry/features/share/data/shares_repository.dart';
 import 'package:medi_carry/features/dashboard/view/home_screen.dart';
 import 'package:medi_carry/features/profile/view/profile_screen.dart';
 import 'package:medi_carry/features/records/view/medical_records_screen.dart';
+import 'package:medi_carry/core/services/notification_service.dart';
+import 'package:medi_carry/features/cards/data/cards_repository.dart';
+import 'package:medi_carry/features/medications/data/medications_repository.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../support/test_providers.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -68,13 +73,22 @@ void main() {
               value: RecordsRepository(firestore: FakeFirebaseFirestore())),
           RepositoryProvider<SharesRepository>.value(
               value: SharesRepository(firestore: FakeFirebaseFirestore())),
+          RepositoryProvider<MedicationsRepository>.value(
+              value: MedicationsRepository(firestore: FakeFirebaseFirestore())),
+          RepositoryProvider<CardsRepository>.value(
+              value: CardsRepository(firestore: FakeFirebaseFirestore())),
+          // Never initialised, so every scheduling call is a no-op — the
+          // widget tests must not reach the notifications platform channel.
+          RepositoryProvider<NotificationService>.value(
+              value: NotificationService()),
         ],
-        child: MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => AuthBloc(authRepository: authRepository)),
-            BlocProvider(create: (_) => ThemeCubit(store: MockThemeModeStore())),
-          ],
-          child: MaterialApp(theme: AppTheme.light, home: const AppShell()),
+        child: withMediBlocs(
+          authRepository: authRepository,
+          userRepository: userRepository,
+          child: BlocProvider(
+            create: (_) => ThemeCubit(store: MockThemeModeStore()),
+            child: MaterialApp(theme: AppTheme.light, home: const AppShell()),
+          ),
         ),
       ),
     );
@@ -86,7 +100,7 @@ void main() {
     await pumpShell(tester);
 
     expect(find.text('Home'), findsOneWidget);
-    expect(find.text('History'), findsOneWidget);
+    expect(find.text('Records'), findsOneWidget);
     expect(find.text('My Cards'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
 
@@ -96,7 +110,7 @@ void main() {
   testWidgets('switching tabs swaps the visible screen', (tester) async {
     await pumpShell(tester);
 
-    await tester.tap(find.text('History'));
+    await tester.tap(find.text('Records'));
     await tester.pump();
     expect(find.byType(MedicalRecordsScreen), findsOneWidget);
 
@@ -117,7 +131,7 @@ void main() {
     // Previously each tab tap was a Navigator.push, so this loop would stack
     // ~8 routes and leave duplicate screens alive.
     for (var i = 0; i < 4; i++) {
-      await tester.tap(find.text('History'));
+      await tester.tap(find.text('Records'));
       await tester.pump();
       await tester.tap(find.text('Profile'));
       await tester.pump();
@@ -151,5 +165,37 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
     // Home is the visible tab again — the nav bar still shows all four tabs.
     expect(find.text('Home'), findsOneWidget);
+  });
+
+  group('REGRESSION: a tab screen\'s add button clears the bottom bar', () {
+    // Tab screens sit inside the shell's `extendBody: true` body, so they are
+    // laid out against the full screen height and their FAB was drawn behind
+    // the bar rather than above it.
+    Future<void> expectFabAboveNav(WidgetTester tester, String label) async {
+      final fab = tester.getRect(find.widgetWithText(FloatingActionButton, label));
+      final nav = tester.getRect(find.byType(MediBottomNav));
+
+      expect(
+        fab.bottom,
+        lessThanOrEqualTo(nav.top),
+        reason: '"$label" overlaps the bottom nav bar',
+      );
+    }
+
+    testWidgets('on Records', (tester) async {
+      await pumpShell(tester);
+      await tester.tap(find.text('Records'));
+      await tester.pump();
+
+      await expectFabAboveNav(tester, 'Add Record');
+    });
+
+    testWidgets('on My Cards', (tester) async {
+      await pumpShell(tester);
+      await tester.tap(find.text('My Cards'));
+      await tester.pump();
+
+      await expectFabAboveNav(tester, 'Add Card');
+    });
   });
 }

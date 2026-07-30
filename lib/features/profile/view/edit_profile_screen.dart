@@ -9,6 +9,8 @@ import '../../../core/theme/app_semantic_colors.dart';
 import '../../auth/data/user_repository.dart';
 import '../../auth/models/patient_profile.dart';
 import '../widgets/edit_profile_fields.dart';
+import '../widgets/patient_avatar.dart';
+import 'profile_photo_actions.dart';
 
 /// Edit Profile — an implementation of the "Edit Profile" Figma frame
 /// (node 25:447).
@@ -38,6 +40,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   DateTime? _dateOfBirth;
   String? _bloodType;
   String? _gender;
+  String? _photoUrl;
   bool _isSaving = false;
 
   @override
@@ -52,6 +55,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _dateOfBirth = p.dateOfBirth == null ? null : DateTime.tryParse(p.dateOfBirth!);
     _bloodType = _bloodTypes.contains(p.bloodType) ? p.bloodType : null;
     _gender = _genders.contains(p.gender) ? p.gender : null;
+    _photoUrl = p.photoUrl;
+  }
+
+  /// Delegates to the shared flow, which offers the camera as well as the
+  /// gallery and writes the photo straight to the profile — so it survives
+  /// backing out of this form without saving.
+  Future<void> _pickPhoto() async {
+    final updated = await ProfilePhotoActions.change(
+      context,
+      uid: widget.profile.uid,
+      currentPhotoUrl: _photoUrl,
+    );
+    if (mounted) setState(() => _photoUrl = updated);
   }
 
   @override
@@ -94,6 +110,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       gender: _gender,
       emergencyContactName: _trimmedOrNull(_contactNameController.text),
       emergencyContactPhone: _trimmedOrNull(_contactPhoneController.text),
+      photoUrl: _photoUrl,
     );
 
     try {
@@ -167,7 +184,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               ? widget.profile.fullName
                               : _nameController.text.trim(),
                           patientId: widget.profile.patientId,
-                          onChangePhoto: () {},
+                          photoUrl: _photoUrl,
+                          onChangePhoto: _pickPhoto,
                         ),
                         const SizedBox(height: 32),
                         _FormCard(
@@ -330,11 +348,13 @@ class _PictureSection extends StatelessWidget {
   const _PictureSection({
     required this.name,
     required this.patientId,
+    this.photoUrl,
     this.onChangePhoto,
   });
 
   final String name;
   final String patientId;
+  final String? photoUrl;
   final VoidCallback? onChangePhoto;
 
   @override
@@ -362,13 +382,7 @@ class _PictureSection extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: ClipOval(
-                  // Stand-in until patient profile photos are wired up.
-                  child: Image.asset(
-                    AppAssets.avatarPlaceholder,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                child: PatientAvatar(photoUrl: photoUrl, size: 88),
               ),
               Positioned(
                 right: 0,

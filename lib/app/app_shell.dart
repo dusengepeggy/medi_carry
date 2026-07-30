@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../core/services/notification_service.dart';
+import '../features/auth/bloc/auth/auth_bloc.dart';
 import '../features/cards/view/cards_screen.dart';
 import '../features/dashboard/view/home_screen.dart';
 import '../features/dashboard/widgets/medi_bottom_nav.dart';
+import '../features/medications/bloc/medications_cubit.dart';
+import '../features/medications/data/medications_repository.dart';
 import '../features/profile/view/profile_screen.dart';
 import '../features/records/view/medical_records_screen.dart';
 import '../features/share/view/share_records_screen.dart';
@@ -25,6 +30,21 @@ class AppShell extends StatefulWidget {
       .dependOnInheritedWidgetOfExactType<_AppShellScope>()
       ?.controller;
 
+  /// How far above the bottom of the screen a tab screen's own content has to
+  /// sit to clear the shell's bottom bar.
+  ///
+  /// Tab screens live inside the shell's `extendBody: true` body, so they are
+  /// laid out against the full screen height and know nothing about the bar
+  /// drawn over them — a floating action button placed without this ends up
+  /// behind it.
+  ///
+  /// Measured from the live bar rather than assumed, because its height grows
+  /// with the text scale. Falls back to an estimate when the screen is being
+  /// rendered outside a shell.
+  static double bottomBarClearance(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_AppShellScope>()?.barHeight ??
+      MediBottomNav.estimatedClearance(context);
+
   @override
   State<AppShell> createState() => _AppShellState();
 }
@@ -40,15 +60,19 @@ class _AppShellScope extends InheritedWidget {
   const _AppShellScope({
     required this.controller,
     required this.activeTab,
+    required this.barHeight,
     required super.child,
   });
 
   final AppShellController controller;
   final MediTab activeTab;
 
+  /// The measured height of the bottom bar, including the system inset.
+  final double barHeight;
+
   @override
   bool updateShouldNotify(_AppShellScope oldWidget) =>
-      activeTab != oldWidget.activeTab;
+      activeTab != oldWidget.activeTab || barHeight != oldWidget.barHeight;
 }
 
 class _AppShellState extends State<AppShell> {
@@ -63,7 +87,35 @@ class _AppShellState extends State<AppShell> {
     for (final tab in _tabs) tab: GlobalKey<NavigatorState>(),
   };
 
+  /// Measures the bottom bar so tab screens can lift their own content clear
+  /// of it. Its height is not a constant — it grows with the text scale.
+  final _barKey = GlobalKey();
+
+  double _barHeight = MediBottomNav.estimatedHeight;
+
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureBar());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-measure after a text-scale or inset change.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureBar());
+  }
+
+  void _measureBar() {
+    if (!mounted) return;
+    final box = _barKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final measured = box.size.height;
+    if ((measured - _barHeight).abs() < 0.5) return;
+    setState(() => _barHeight = measured);
+  }
 
   MediTab get _currentTab => _tabs[_index];
 
@@ -115,9 +167,27 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final uid = context.select((AuthBloc b) => b.state.user.uid);
+    // Provided at the shell rather than per-screen so the dashboard's "next
+    // dose" card and the medications screen share one subscription — and so
+    // reminders are (re)scheduled as soon as the patient is signed in,
+    // wherever they happen to land.
+    return BlocProvider(
+      key: ValueKey(uid),
+      create: (_) => MedicationsCubit(
+        repository: context.read<MedicationsRepository>(),
+        notifications: context.read<NotificationService>(),
+        uid: uid,
+      ),
+      child: _buildShell(context),
+    );
+  }
+
+  Widget _buildShell(BuildContext context) {
     return _AppShellScope(
       controller: AppShellController(goToTab: _onTabSelected),
       activeTab: _currentTab,
+      barHeight: _barHeight,
       child: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
@@ -137,6 +207,7 @@ class _AppShellState extends State<AppShell> {
             ],
           ),
           bottomNavigationBar: MediBottomNav(
+            key: _barKey,
             active: _currentTab,
             onHome: () => _onTabSelected(MediTab.home),
             onHistory: () => _onTabSelected(MediTab.history),

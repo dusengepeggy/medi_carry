@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medi_carry/core/theme/app_theme.dart';
-import 'package:medi_carry/features/auth/bloc/auth/auth_bloc.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
 import 'package:medi_carry/features/records/data/records_repository.dart';
@@ -12,6 +11,8 @@ import 'package:medi_carry/features/records/view/medical_records_screen.dart';
 import 'package:medi_carry/features/records/widgets/record_card.dart';
 import 'package:medi_carry/features/records/widgets/record_filter_chips.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../support/test_providers.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -63,8 +64,9 @@ void main() {
     await tester.pumpWidget(
       RepositoryProvider<RecordsRepository>.value(
         value: recordsRepository,
-        child: BlocProvider(
-          create: (_) => AuthBloc(authRepository: authRepository),
+        child: withMediBlocs(
+          authRepository: authRepository,
+          userRepository: fakeUserRepository(),
           child: MaterialApp(
             theme: AppTheme.light,
             home: const MedicalRecordsScreen(),

@@ -5,15 +5,19 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../app/app_routes.dart';
+import '../../../app/app_shell.dart';
+import '../../dashboard/widgets/medi_bottom_nav.dart' show MediTab;
 import '../../../core/services/emergency_card_store.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../auth/bloc/auth/auth_bloc.dart';
-import '../../auth/data/user_repository.dart';
 import '../../auth/models/patient_profile.dart';
+import '../bloc/profile_cubit.dart';
 import '../widgets/appearance_toggle.dart';
+import '../widgets/patient_avatar.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/profile_option_card.dart';
+import 'profile_photo_actions.dart';
 
 /// User Profile — an implementation of the "User Profile" Figma frame
 /// (node 25:339).
@@ -40,36 +44,51 @@ class ProfileScreen extends StatelessWidget {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 512),
-                  child: StreamBuilder<PatientProfile?>(
-                    stream: user.isEmpty
-                        ? const Stream<PatientProfile?>.empty()
-                        : context.read<UserRepository>().watchProfile(user.uid),
-                    builder: (context, snapshot) {
-                      final profile = snapshot.data;
+                  // Reads the app-wide profile stream, the same one the
+                  // avatars in every other header watch.
+                  child: BlocBuilder<ProfileCubit, ProfileState>(
+                    builder: (context, profileState) {
+                      final profile = profileState.profile;
                       // Keep the offline emergency snapshot current, so it is
                       // readable while locked and without a network.
                       if (profile != null) {
                         context.read<EmergencyCardStore>().save(profile);
                       }
-                      final name = profile?.fullName.isNotEmpty ?? false
-                          ? profile!.fullName
-                          : (user.displayName?.trim().isNotEmpty ?? false)
+                      final name = profileState.fullName ??
+                          (user.displayName?.trim().isNotEmpty ?? false
                               ? user.displayName!
-                              : 'MediCarry Patient';
+                              : 'MediCarry Patient');
                       return Column(
                         children: [
                           ProfileHeader(
                             name: name,
                             patientId: profile?.patientId,
-                            onEditPhoto: profile == null
+                            photoUrl: profile?.photoUrl,
+                            // The camera badge changes the photo here and
+                            // now. It used to open the whole Edit Profile
+                            // screen, where the patient had to find a second
+                            // camera badge to do the thing they had already
+                            // asked for. Enabled off the signed-in uid rather
+                            // than the profile document, so it still works
+                            // before that document exists.
+                            onEditPhoto: user.isEmpty
                                 ? null
-                                : () => _openEditProfile(context, profile),
+                                : () => ProfilePhotoActions.change(
+                                      context,
+                                      uid: user.uid,
+                                      currentPhotoUrl: profile?.photoUrl,
+                                    ),
                           ),
                           const SizedBox(height: 32),
                           _OptionsGrid(
                             onPersonalInformation: profile == null
                                 ? null
                                 : () => _openEditProfile(context, profile),
+                            onHealthInsurance: () =>
+                                AppShell.of(context)?.goToTab(MediTab.cards),
+                            onNotificationSettings: () =>
+                                AppNav.openMedications(context),
+                            onSecurity: () => AppNav.openSecuritySettings(context),
                           ),
                           const SizedBox(height: 16),
                           const AppearanceToggle(),
@@ -120,12 +139,7 @@ class _ProfileAppBar extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.avatarRing, width: 2),
                     ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        AppAssets.avatarPlaceholder,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    child: const LivePatientAvatar(size: 28),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -161,10 +175,19 @@ class _ProfileAppBar extends StatelessWidget {
 }
 
 class _OptionsGrid extends StatelessWidget {
-  const _OptionsGrid({this.onPersonalInformation});
+  const _OptionsGrid({
+    this.onPersonalInformation,
+    this.onHealthInsurance,
+    this.onNotificationSettings,
+    this.onSecurity,
+  });
 
   /// Null until the patient's profile has loaded, since Edit Profile needs it.
   final VoidCallback? onPersonalInformation;
+
+  final VoidCallback? onHealthInsurance;
+  final VoidCallback? onNotificationSettings;
+  final VoidCallback? onSecurity;
 
   @override
   Widget build(BuildContext context) {
@@ -179,28 +202,31 @@ class _OptionsGrid extends StatelessWidget {
           onTap: onPersonalInformation,
         ),
         const SizedBox(height: 16),
-        const ProfileOptionCard(
+        ProfileOptionCard(
           icon: AppAssets.profileInsurance,
-          iconSize: Size(16, 20),
+          iconSize: const Size(16, 20),
           accent: AppColors.indigo,
           title: 'Health Insurance',
           description: 'Manage providers and policy details',
+          onTap: onHealthInsurance,
         ),
         const SizedBox(height: 16),
-        const ProfileOptionCard(
+        ProfileOptionCard(
           icon: AppAssets.profileBell,
-          iconSize: Size(16, 20),
+          iconSize: const Size(16, 20),
           accent: AppColors.slateGray,
-          title: 'Notification Settings',
-          description: 'Alerts for medication and appointments',
+          title: 'Medication Reminders',
+          description: 'Doses, times, and alerts',
+          onTap: onNotificationSettings,
         ),
         const SizedBox(height: 16),
-        const ProfileOptionCard(
+        ProfileOptionCard(
           icon: AppAssets.profileSecurity,
-          iconSize: Size(16, 21),
+          iconSize: const Size(16, 21),
           accent: AppColors.danger,
           title: 'Security',
-          description: 'Password, FaceID, and data privacy',
+          description: 'App-lock PIN and biometric unlock',
+          onTap: onSecurity,
         ),
       ],
     );
@@ -235,7 +261,10 @@ class _SignOutButton extends StatelessWidget {
                 fontSize: 16,
                 height: 24 / 16,
                 fontWeight: FontWeight.w700,
-                color: context.colors.canvas,
+                // The button is navy in both modes, so the label is white in
+                // both. It used to follow `canvas`, which goes near-black in
+                // dark and vanished into the button.
+                color: Colors.white,
               ),
             ),
           ],

@@ -19,6 +19,7 @@ class PatientProfile extends Equatable {
     this.gender,
     this.emergencyContactName,
     this.emergencyContactPhone,
+    this.photoUrl,
   });
 
   final String uid;
@@ -43,6 +44,9 @@ class PatientProfile extends Equatable {
   final String? emergencyContactName;
   final String? emergencyContactPhone;
 
+  /// Cloudinary URL of the patient's photo, or null for the placeholder avatar.
+  final String? photoUrl;
+
   Map<String, dynamic> toMap() => {
         'uid': uid,
         'fullName': fullName,
@@ -55,6 +59,7 @@ class PatientProfile extends Equatable {
         'gender': gender,
         'emergencyContactName': emergencyContactName,
         'emergencyContactPhone': emergencyContactPhone,
+        'photoUrl': photoUrl,
       };
 
   factory PatientProfile.fromMap(Map<String, dynamic> map) => PatientProfile(
@@ -70,6 +75,7 @@ class PatientProfile extends Equatable {
         gender: map['gender'] as String?,
         emergencyContactName: map['emergencyContactName'] as String?,
         emergencyContactPhone: map['emergencyContactPhone'] as String?,
+        photoUrl: map['photoUrl'] as String?,
       );
 
   PatientProfile copyWith({
@@ -81,6 +87,7 @@ class PatientProfile extends Equatable {
     String? gender,
     String? emergencyContactName,
     String? emergencyContactPhone,
+    String? photoUrl,
   }) =>
       PatientProfile(
         uid: uid,
@@ -95,6 +102,7 @@ class PatientProfile extends Equatable {
         emergencyContactName: emergencyContactName ?? this.emergencyContactName,
         emergencyContactPhone:
             emergencyContactPhone ?? this.emergencyContactPhone,
+        photoUrl: photoUrl ?? this.photoUrl,
       );
 
   @override
@@ -110,5 +118,6 @@ class PatientProfile extends Equatable {
         gender,
         emergencyContactName,
         emergencyContactPhone,
+        photoUrl,
       ];
 }

@@ -7,12 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medi_carry/app.dart';
 import 'package:medi_carry/core/services/biometric_service.dart';
+import 'package:medi_carry/core/services/cloudinary_storage.dart';
 import 'package:medi_carry/core/services/emergency_card_store.dart';
+import 'package:medi_carry/core/services/notification_service.dart';
 import 'package:medi_carry/core/services/secure_storage_service.dart';
 import 'package:medi_carry/core/services/theme_mode_store.dart';
 import 'package:medi_carry/features/auth/data/auth_repository.dart';
 import 'package:medi_carry/features/auth/data/user_repository.dart';
 import 'package:medi_carry/features/auth/models/app_user.dart';
+import 'package:medi_carry/features/cards/data/cards_repository.dart';
+import 'package:medi_carry/features/medications/data/medications_repository.dart';
 import 'package:medi_carry/features/records/data/records_repository.dart';
 import 'package:medi_carry/features/share/data/shares_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -53,6 +57,12 @@ void main() {
         themeModeStore: themeModeStore,
         recordsRepository: RecordsRepository(firestore: firestore),
         sharesRepository: SharesRepository(firestore: firestore),
+        medicationsRepository: MedicationsRepository(firestore: firestore),
+        cardsRepository: CardsRepository(firestore: firestore),
+        fileStorage: CloudinaryStorage(),
+        // Never initialised, so it stays inert: the smoke test must not touch
+        // the notifications platform channel.
+        notificationService: NotificationService(),
       ),
     );
     // Let the auth stream emit and the gate resolve to unauthenticated.

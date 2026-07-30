@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../profile/widgets/patient_avatar.dart';
 
 /// Translucent top app bar from the Medical Records (Final) design: avatar,
 /// stacked greeting/name, and a search action.
@@ -64,13 +65,7 @@ class RecordsAppBar extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            child: ClipOval(
-                              // Stand-in until profile photos are wired up.
-                              child: Image.asset(
-                                AppAssets.avatarPlaceholder,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                            child: const LivePatientAvatar(size: 44),
                           ),
                         ),
                         const SizedBox(width: 8),

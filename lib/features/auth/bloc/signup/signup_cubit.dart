@@ -26,6 +26,23 @@ class SignUpCubit extends Cubit<SignUpState> {
   final UserRepository _userRepository;
   final SecureStorageService _secureStorage;
 
+  /// Seeds the wizard for someone who is **already** authenticated — a Google
+  /// sign-in, which produces a Firebase user but no profile document and no
+  /// app-lock PIN.
+  ///
+  /// The remaining steps then collect exactly what manual sign-up collects, so
+  /// both routes end up with the same profile and the same offline lock.
+  void adoptAuthenticatedUser({
+    required String uid,
+    required String fullName,
+    required String email,
+  }) =>
+      emit(state.copyWith(
+        existingUid: uid,
+        fullName: fullName.trim(),
+        email: email.trim(),
+      ));
+
   // Step 1.
   void updateAccount({
     required String fullName,
@@ -59,7 +76,7 @@ class SignUpCubit extends Cubit<SignUpState> {
   /// Commit the wizard. On success, the AuthBloc's auth stream picks up the
   /// newly created user and routes into the app.
   Future<void> submit() async {
-    if (!state.isStep1Valid) {
+    if (!state.isAccountReady) {
       emit(state.copyWith(
         status: SignUpStatus.failure,
         errorMessage: 'Please complete your account details.',
@@ -76,14 +93,18 @@ class SignUpCubit extends Cubit<SignUpState> {
 
     emit(state.copyWith(status: SignUpStatus.submitting));
     try {
-      final user = await _authRepository.signUpWithEmail(
-        email: state.email,
-        password: state.password,
-        displayName: state.fullName,
-      );
+      // A Google user is already authenticated, so there is no account to
+      // create — only the profile and lock setup that sign-in skipped.
+      final uid = state.existingUid ??
+          (await _authRepository.signUpWithEmail(
+            email: state.email,
+            password: state.password,
+            displayName: state.fullName,
+          ))
+              .uid;
 
       final profile = PatientProfile(
-        uid: user.uid,
+        uid: uid,
         fullName: state.fullName.trim(),
         email: state.email.trim(),
         patientId: UserRepository.generatePatientId(),

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
@@ -10,12 +11,21 @@ import '../../../core/theme/app_colors.dart';
 /// "In-Person Quick Share" navy card from the Share Records (Final) design —
 /// the offline QR hand-off that is MediCarry's core differentiator.
 class QuickShareCard extends StatelessWidget {
-  const QuickShareCard({super.key, this.onShowQr, this.busy = false});
+  const QuickShareCard({
+    super.key,
+    this.onShowQr,
+    this.busy = false,
+    this.code,
+  });
 
   final VoidCallback? onShowQr;
 
   /// True while the encrypted code is being generated.
   final bool busy;
+
+  /// The most recently generated share code, rendered in the card's panel.
+  /// Null before the patient has generated one.
+  final String? code;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +90,7 @@ class QuickShareCard extends StatelessWidget {
                   const SizedBox(height: 16),
                   _ShowQrButton(onTap: busy ? null : onShowQr, busy: busy),
                   const SizedBox(height: 32),
-                  const _QrPanel(),
+                  _QrPanel(code: code),
                 ],
               ),
             ),
@@ -196,16 +206,20 @@ class _ShowQrButton extends StatelessWidget {
   }
 }
 
-/// White panel holding the QR artwork.
+/// White panel holding the QR.
 ///
-/// TODO: the QR here is the design's static sample. The real screen must
-/// render a QR encoding the patient's share payload, generated on-device so it
-/// works with no connectivity.
+/// Once a code has been generated it renders that code, produced on-device so
+/// it works with no connectivity. Before then it shows the design's outline
+/// artwork, dimmed and labelled, rather than a decorative fake QR that a
+/// clinician might try to scan.
 class _QrPanel extends StatelessWidget {
-  const _QrPanel();
+  const _QrPanel({this.code});
+
+  final String? code;
 
   @override
   Widget build(BuildContext context) {
+    final value = code;
     return Container(
       width: 192,
       height: 192,
@@ -222,11 +236,45 @@ class _QrPanel extends StatelessWidget {
         ],
       ),
       child: Center(
-        child: SvgPicture.asset(
-          AppAssets.qrPlaceholder,
-          width: 90,
-          height: 90,
-        ),
+        child: value == null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Opacity(
+                    opacity: 0.25,
+                    child: SvgPicture.asset(
+                      AppAssets.qrPlaceholder,
+                      width: 72,
+                      height: 72,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Tap Show QR to\ngenerate a code',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.hankenGrotesk(
+                      fontSize: 12,
+                      height: 16 / 12,
+                      color: AppColors.slate,
+                    ),
+                  ),
+                ],
+              )
+            : QrImageView(
+                data: value,
+                version: QrVersions.auto,
+                size: 160,
+                backgroundColor: Colors.white,
+                errorCorrectionLevel: QrErrorCorrectLevel.M,
+                errorStateBuilder: (context, error) => Text(
+                  'Too much selected to fit in one QR.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.hankenGrotesk(
+                    fontSize: 12,
+                    color: AppColors.slate,
+                  ),
+                ),
+              ),
       ),
     );
   }

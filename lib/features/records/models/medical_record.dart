@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../core/models/stored_attachment.dart';
 import '../../../core/theme/app_assets.dart';
 import '../widgets/record_card.dart';
 
@@ -56,6 +57,12 @@ enum RecordCategory {
       };
 }
 
+/// A file attached to a record — an image or PDF stored on Cloudinary.
+///
+/// The same shape backs insurance-card documents, so the storage model lives
+/// in `core` and this name is the records-side alias for it.
+typedef RecordAttachment = StoredAttachment;
+
 /// A patient's medical record, stored at Firestore `users/{uid}/records/{id}`.
 class MedicalRecord extends Equatable {
   const MedicalRecord({
@@ -67,6 +74,7 @@ class MedicalRecord extends Equatable {
     this.notes = '',
     required this.date,
     required this.createdAt,
+    this.attachments = const [],
   });
 
   final String id;
@@ -90,6 +98,9 @@ class MedicalRecord extends Equatable {
   /// When the record was added to MediCarry (for ordering).
   final DateTime createdAt;
 
+  /// Images/PDFs stored on Cloudinary.
+  final List<RecordAttachment> attachments;
+
   Map<String, dynamic> toMap() => {
         'category': category.id,
         'title': title,
@@ -98,6 +109,7 @@ class MedicalRecord extends Equatable {
         'notes': notes,
         'date': Timestamp.fromDate(date),
         'createdAt': Timestamp.fromDate(createdAt),
+        'attachments': attachments.map((a) => a.toMap()).toList(),
       };
 
   factory MedicalRecord.fromMap(String id, Map<String, dynamic> map) =>
@@ -110,6 +122,10 @@ class MedicalRecord extends Equatable {
         notes: map['notes'] as String? ?? '',
         date: _toDate(map['date']),
         createdAt: _toDate(map['createdAt']),
+        attachments: [
+          for (final a in (map['attachments'] as List? ?? const []))
+            RecordAttachment.fromMap(a as Map<String, dynamic>),
+        ],
       );
 
   static DateTime _toDate(Object? value) => switch (value) {
@@ -139,5 +155,5 @@ class MedicalRecord extends Equatable {
 
   @override
   List<Object?> get props =>
-      [id, category, title, provider, detail, notes, date, createdAt];
+      [id, category, title, provider, detail, notes, date, createdAt, attachments];
 }

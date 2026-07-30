@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/models/stored_attachment.dart';
+import '../../../core/services/attachment_picker.dart';
+import '../../../core/services/file_storage.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/widgets/attachment_source_sheet.dart';
+import '../../../core/widgets/documents_field.dart';
+import '../../../core/widgets/medi_form_fields.dart';
 import '../../auth/bloc/auth/auth_bloc.dart';
 import '../data/records_repository.dart';
 import '../models/medical_record.dart';
@@ -27,7 +32,42 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
 
   RecordCategory _category = RecordCategory.labResult;
   DateTime _date = DateTime.now();
+  final List<RecordAttachment> _attachments = [];
   bool _saving = false;
+  bool _uploading = false;
+
+  /// Camera, gallery or file, then upload each pick to storage. Attachments
+  /// appear as they finish so a slow connection still shows progress.
+  Future<void> _pickAttachments() async {
+    final source = await AttachmentSourceSheet.show(
+      context,
+      title: 'Attach to this record',
+    );
+    if (source == null || !mounted) return;
+
+    final picker = AttachmentPicker(storage: context.read<FileStorage>());
+    setState(() => _uploading = true);
+    try {
+      final picked = await picker.pick(source);
+      for (final document in picked) {
+        final stored = await picker.upload(document, folder: 'records');
+        if (!mounted) return;
+        setState(() {
+          _attachments.add(
+            StoredAttachment.fromStoredFile(stored, document.name),
+          );
+        });
+      }
+    } on FileStorageException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -49,6 +89,10 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     if (picked != null) setState(() => _date = picked);
   }
 
+  static String _dateLabel(DateTime date) =>
+      '${date.month.toString().padLeft(2, '0')}/'
+      '${date.day.toString().padLeft(2, '0')}/${date.year}';
+
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final uid = context.read<AuthBloc>().state.user.uid;
@@ -64,6 +108,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
       notes: _notesController.text.trim(),
       date: _date,
       createdAt: DateTime.now(),
+      attachments: List.of(_attachments),
     );
     try {
       await context.read<RecordsRepository>().add(uid, record);
@@ -108,225 +153,73 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
-              _Label('CATEGORY'),
+              const MediLabel('CATEGORY'),
               const SizedBox(height: 8),
-              _CategoryPicker(
-                value: _category,
-                onChanged: (c) => setState(() => _category = c),
+              MediChoiceChips<RecordCategory>(
+                values: RecordCategory.values,
+                selected: _category,
+                labelOf: (c) => c.title,
+                onSelected: (c) => setState(() => _category = c),
               ),
               const SizedBox(height: 20),
-              _Label('TITLE'),
+              const MediLabel('TITLE'),
               const SizedBox(height: 8),
-              _Field(
+              MediTextField(
                 controller: _titleController,
                 hint: 'e.g. Comprehensive Metabolic Panel',
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Enter a title' : null,
               ),
               const SizedBox(height: 20),
-              _Label('PROVIDER / FACILITY'),
+              const MediLabel('PROVIDER / FACILITY'),
               const SizedBox(height: 8),
-              _Field(
+              MediTextField(
                 controller: _providerController,
                 hint: 'e.g. Nairobi Hospital • Dr. J. Kamau',
               ),
               const SizedBox(height: 20),
-              _Label('DETAIL'),
+              const MediLabel('DETAIL'),
               const SizedBox(height: 8),
-              _Field(
+              MediTextField(
                 controller: _detailController,
                 hint: 'Dosage, result, or summary',
                 maxLines: 2,
               ),
               const SizedBox(height: 20),
-              _Label('DATE'),
+              const MediLabel('DATE'),
               const SizedBox(height: 8),
-              _DateField(date: _date, onTap: _pickDate),
+              MediTapField(
+                value: _dateLabel(_date),
+                icon: Icons.calendar_today_outlined,
+                onTap: _pickDate,
+              ),
               const SizedBox(height: 20),
-              _Label('NOTES (OPTIONAL)'),
+              const MediLabel('NOTES (OPTIONAL)'),
               const SizedBox(height: 8),
-              _Field(
+              MediTextField(
                 controller: _notesController,
                 hint: 'Clinician notes',
                 maxLines: 4,
               ),
+              const SizedBox(height: 20),
+              DocumentsField(
+                label: 'ATTACHMENTS (IMAGES / PDF)',
+                documents: _attachments,
+                uploading: _uploading,
+                enabled: context.read<FileStorage>().isConfigured,
+                addLabel: 'Add file',
+                onAdd: _pickAttachments,
+                onRemove: (a) => setState(() => _attachments.remove(a)),
+              ),
               const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: _saving ? null : _save,
-                  style: TextButton.styleFrom(
-                    backgroundColor: AppColors.navy,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: _saving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          'Save Record',
-                          style: GoogleFonts.hankenGrotesk(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                ),
+              MediPrimaryButton(
+                label: 'Save Record',
+                busy: _saving || _uploading,
+                onPressed: _save,
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CategoryPicker extends StatelessWidget {
-  const _CategoryPicker({required this.value, required this.onChanged});
-
-  final RecordCategory value;
-  final ValueChanged<RecordCategory> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final c in RecordCategory.values)
-          GestureDetector(
-            onTap: () => onChanged(c),
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: c == value
-                    ? AppColors.navy
-                    : context.colors.surfaceMuted,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                c.title,
-                style: GoogleFonts.hankenGrotesk(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: c == value ? Colors.white : context.colors.textPrimary,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _DateField extends StatelessWidget {
-  const _DateField({required this.date, required this.onTap});
-
-  final DateTime date;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = '${date.month.toString().padLeft(2, '0')}/'
-        '${date.day.toString().padLeft(2, '0')}/${date.year}';
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: context.colors.surfaceMuted,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.hankenGrotesk(
-                fontSize: 16,
-                color: context.colors.textPrimary,
-              ),
-            ),
-            Icon(Icons.calendar_today_outlined,
-                size: 18, color: context.colors.textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Field extends StatelessWidget {
-  const _Field({
-    required this.controller,
-    required this.hint,
-    this.maxLines = 1,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final int maxLines;
-  final String? Function(String?)? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      validator: validator,
-      style: GoogleFonts.hankenGrotesk(fontSize: 16, color: colors.textPrimary),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.hankenGrotesk(
-          fontSize: 16,
-          color: colors.textMuted,
-        ),
-        filled: true,
-        fillColor: colors.surfaceMuted,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: colors.textPrimary, width: 1.5),
-        ),
-      ),
-    );
-  }
-}
-
-class _Label extends StatelessWidget {
-  const _Label(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: GoogleFonts.hankenGrotesk(
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.6,
-        color: context.colors.textSecondary,
       ),
     );
   }

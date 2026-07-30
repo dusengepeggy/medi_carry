@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import 'patient_avatar.dart';
 
 /// Avatar, name and patient-ID pill from the User Profile design.
 class ProfileHeader extends StatelessWidget {
@@ -12,6 +13,7 @@ class ProfileHeader extends StatelessWidget {
     super.key,
     required this.name,
     this.patientId,
+    this.photoUrl,
     this.onEditPhoto,
   });
 
@@ -19,6 +21,9 @@ class ProfileHeader extends StatelessWidget {
 
   /// e.g. "MC-8829-41". The pill is hidden until the profile supplies one.
   final String? patientId;
+
+  /// Cloudinary photo URL, or null for the placeholder.
+  final String? photoUrl;
 
   final VoidCallback? onEditPhoto;
 
@@ -47,13 +52,7 @@ class ProfileHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: ClipOval(
-                  // Stand-in until patient profile photos are wired up.
-                  child: Image.asset(
-                    AppAssets.avatarPlaceholder,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                child: PatientAvatar(photoUrl: photoUrl, size: 104),
               ),
               Positioned(
                 right: 0,

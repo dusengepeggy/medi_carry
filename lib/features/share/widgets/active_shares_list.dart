@@ -41,7 +41,10 @@ class ActiveSharesList extends StatelessWidget {
                   color: context.colors.textPrimary,
                 ),
               ),
-              if (shares.isNotEmpty)
+              // Always offered: the history is also where expired and revoked
+              // shares are auditable, and those are exactly the cases where
+              // the active list is empty.
+              if (onSeeAll != null)
                 GestureDetector(
                   onTap: onSeeAll,
                   child: Text(

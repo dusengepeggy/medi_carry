@@ -80,15 +80,26 @@ class _RecordsViewState extends State<_RecordsView> {
     return Scaffold(
       backgroundColor: context.colors.surfaceMuted,
       extendBody: true,
-      floatingActionButton: SizedBox(
-        width: 56,
-        height: 56,
-        child: FloatingActionButton(
+      // Labelled rather than an icon-only FAB: "add a record" is the primary
+      // job on this screen, and a bare glyph left patients hunting for it.
+      // Lifted clear of the shell's bottom bar, which is drawn over this
+      // screen rather than inside it.
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: AppShell.bottomBarClearance(context)),
+        child: FloatingActionButton.extended(
           onPressed: () => AppNav.openAddRecord(context),
           backgroundColor: AppColors.indigoFinal,
+          foregroundColor: Colors.white,
           elevation: 8,
-          shape: const CircleBorder(),
-          child: SvgPicture.asset(AppAssets.fabAdd, width: 14, height: 14),
+          icon: SvgPicture.asset(AppAssets.fabAdd, width: 14, height: 14),
+          label: Text(
+            'Add Record',
+            style: GoogleFonts.hankenGrotesk(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
       body: Column(
@@ -102,7 +113,12 @@ class _RecordsViewState extends State<_RecordsView> {
           Expanded(
             child: BlocBuilder<RecordsCubit, RecordsState>(
               builder: (context, state) => SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 16, bottom: 136),
+                // Clears the bottom bar and the FAB sitting above it, so the
+                // last record can always be scrolled into view.
+                padding: EdgeInsets.only(
+                  top: 16,
+                  bottom: AppShell.bottomBarClearance(context) + 88,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

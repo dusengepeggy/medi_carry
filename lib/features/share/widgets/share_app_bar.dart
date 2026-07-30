@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../profile/widgets/patient_avatar.dart';
 
 /// Translucent top app bar from the Share Records (Final) design: avatar,
 /// greeting, and a notifications action.
@@ -33,7 +34,10 @@ class ShareAppBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
         child: Container(
-          color: Colors.white.withValues(alpha: 0.9),
+          // Hardcoded white left the greeting as light text on a white bar in
+          // dark mode. The translucency that the blur needs comes from the
+          // theme's own surface now.
+          color: context.colors.surface.withValues(alpha: 0.9),
           child: SafeArea(
             bottom: false,
             child: Padding(
@@ -58,15 +62,7 @@ class ShareAppBar extends StatelessWidget {
                                   color: context.colors.border,
                                   shape: BoxShape.circle,
                                 ),
-                                child: ClipOval(
-                                  // Stand-in until profile photos are wired up.
-                                  child: Image.asset(
-                                    AppAssets.avatarPlaceholder,
-                                    width: 40,
-                                    height: 40,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
+                                child: const LivePatientAvatar(size: 40),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -114,6 +110,12 @@ class ShareAppBar extends StatelessWidget {
                             AppAssets.notifications,
                             width: 18,
                             height: 18,
+                            // Exported as dark ink, which is invisible on the
+                            // dark bar.
+                            colorFilter: ColorFilter.mode(
+                              context.colors.textPrimary,
+                              BlendMode.srcIn,
+                            ),
                           ),
                         ),
                       ),

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../features/auth/models/patient_profile.dart';
+import '../features/auth/view/security_settings_screen.dart';
 import '../features/emergency/view/emergency_info_screen.dart';
+import '../features/medications/bloc/medications_cubit.dart';
+import '../features/medications/view/medications_screen.dart';
 import '../features/profile/view/edit_profile_screen.dart';
 import '../features/records/models/medical_record.dart';
 import '../features/records/view/add_record_screen.dart';
@@ -50,6 +54,30 @@ abstract final class AppNav {
       Navigator.of(context, rootNavigator: true).push<PatientProfile>(
         MaterialPageRoute<PatientProfile>(
           builder: (_) => EditProfileScreen(profile: profile),
+        ),
+      );
+
+  /// The full medication regimen. Pushed on the root navigator because it is
+  /// a focused task reached from several tabs, and the caller supplies the
+  /// [MedicationsCubit] the screen edits through.
+  static Future<void> openMedications(BuildContext context) {
+    final cubit = context.read<MedicationsCubit>();
+    return Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider.value(
+          value: cubit,
+          child: const MedicationsScreen(),
+        ),
+      ),
+    );
+  }
+
+  /// The app-lock settings: PIN and biometric unlock. Root-pushed because it
+  /// is a focused task, and it can lock the app from under itself.
+  static Future<void> openSecuritySettings(BuildContext context) =>
+      Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const SecuritySettingsScreen(),
         ),
       );
 

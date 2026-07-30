@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../bloc/app_lock/app_lock_cubit.dart';
 import '../bloc/auth/auth_bloc.dart';
+import '../widgets/pin_keypad.dart';
 
 /// Offline unlock screen shown when an authenticated session is restored.
 /// Unlocks via biometric or a 4-digit PIN — works with no connectivity.
@@ -73,24 +74,7 @@ class _LockScreenState extends State<LockScreen> {
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: context.colors.textSecondary)),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (var i = 0; i < 4; i++)
-                    Container(
-                      width: 16,
-                      height: 16,
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: i < _pin.length
-                            ? AppColors.navy
-                            : context.colors.surfaceMuted,
-                        border: Border.all(color: context.colors.border),
-                      ),
-                    ),
-                ],
-              ),
+              PinDots(length: _pin.length),
               if (state.errorMessage != null) ...[
                 const SizedBox(height: 12),
                 Text(state.errorMessage!,
@@ -98,7 +82,7 @@ class _LockScreenState extends State<LockScreen> {
                         ?.copyWith(color: theme.colorScheme.error)),
               ],
               const SizedBox(height: 24),
-              _Keypad(
+              PinKeypad(
                 onDigit: _tap,
                 onBackspace: _backspace,
                 showBiometric: state.isBiometricEnabled,
@@ -127,69 +111,6 @@ class _LockScreenState extends State<LockScreen> {
               ),
               const SizedBox(height: 8),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Keypad extends StatelessWidget {
-  const _Keypad({
-    required this.onDigit,
-    required this.onBackspace,
-    required this.showBiometric,
-    required this.onBiometric,
-  });
-
-  final void Function(String) onDigit;
-  final VoidCallback onBackspace;
-  final bool showBiometric;
-  final VoidCallback onBiometric;
-
-  @override
-  Widget build(BuildContext context) {
-    final keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      childAspectRatio: 1.6,
-      children: [
-        for (final k in keys) _Key(label: k, onTap: () => onDigit(k)),
-        showBiometric
-            ? _Key(icon: Icons.fingerprint, onTap: onBiometric)
-            : const SizedBox.shrink(),
-        _Key(label: '0', onTap: () => onDigit('0')),
-        _Key(icon: Icons.backspace_outlined, onTap: onBackspace),
-      ],
-    );
-  }
-}
-
-class _Key extends StatelessWidget {
-  const _Key({this.label, this.icon, required this.onTap});
-  final String? label;
-  final IconData? icon;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(6),
-      child: Material(
-        color: context.colors.surfaceMuted,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Center(
-            child: icon != null
-                ? Icon(icon, color: context.colors.textPrimary)
-                : Text(label!,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(color: context.colors.textPrimary)),
           ),
         ),
       ),

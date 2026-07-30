@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:printing/printing.dart';
 
+import '../../../app/app_routes.dart';
 import '../../../app/app_shell.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_semantic_colors.dart';
@@ -10,6 +12,7 @@ import '../../auth/data/user_repository.dart';
 import '../../dashboard/widgets/medi_bottom_nav.dart' show MediTab;
 import '../../records/data/records_repository.dart';
 import '../bloc/share_cubit.dart';
+import '../data/records_pdf.dart';
 import '../data/shares_repository.dart';
 import '../models/share_grant.dart';
 import '../widgets/access_selection_card.dart';
@@ -20,6 +23,7 @@ import '../widgets/quick_share_card.dart';
 import '../widgets/share_app_bar.dart';
 import '../widgets/share_qr_sheet.dart';
 import 'scan_screen.dart';
+import 'share_history_screen.dart';
 
 /// Share Records (node 2:137) — MediCarry's core differentiator. The patient
 /// picks exactly which categories to share, sets a duration, and generates a
@@ -42,8 +46,15 @@ class ShareRecordsScreen extends StatelessWidget {
   }
 }
 
-class _ShareView extends StatelessWidget {
+class _ShareView extends StatefulWidget {
   const _ShareView();
+
+  @override
+  State<_ShareView> createState() => _ShareViewState();
+}
+
+class _ShareViewState extends State<_ShareView> {
+  bool _exporting = false;
 
   String get _greeting {
     final hour = DateTime.now().hour;
@@ -71,6 +82,79 @@ class _ShareView extends StatelessWidget {
     await context
         .read<ShareCubit>()
         .generate(profile: profile, records: records);
+  }
+
+  /// Builds the health-summary PDF and hands it to the OS share/print sheet,
+  /// which is what lets the patient save it, email it, or print it at a clinic.
+  Future<void> _exportPdf() async {
+    if (_exporting) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final uid = context.read<AuthBloc>().state.user.uid;
+    if (uid.isEmpty) return;
+
+    setState(() => _exporting = true);
+    try {
+      final profile = await context.read<UserRepository>().fetchProfile(uid);
+      if (profile == null) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Complete your profile first.')),
+        );
+        return;
+      }
+      if (!mounted) return;
+      final records =
+          await context.read<RecordsRepository>().watchRecords(uid).first;
+      final bytes = await RecordsPdf.build(profile: profile, records: records);
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: RecordsPdf.fileName(profile),
+      );
+    } catch (_) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Could not create the PDF.')),
+        );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  /// The gear on Access Settings: what the controls mean, plus the blunt
+  /// instrument — revoke everything at once.
+  Future<void> _openAccessSettings() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final repository = context.read<SharesRepository>();
+    final uid = context.read<AuthBloc>().state.user.uid;
+
+    final revokeAll = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: context.colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => const _AccessSettingsSheet(),
+    );
+
+    if (revokeAll != true || uid.isEmpty) return;
+    final count = await repository.revokeAllActive(uid);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 0
+                ? 'There were no active shares to revoke.'
+                : 'Revoked $count ${count == 1 ? 'share' : 'shares'}.',
+          ),
+        ),
+      );
+  }
+
+  void _openHistory(String uid) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => ShareHistoryScreen(uid: uid)),
+    );
   }
 
   @override
@@ -105,7 +189,9 @@ class _ShareView extends StatelessWidget {
               greeting: _greeting,
               name: _firstName(displayName),
               onAvatarTap: () => AppShell.of(context)?.goToTab(MediTab.profile),
-              onNotifications: () {},
+              // The only notifications MediCarry raises are dose reminders,
+              // so the bell goes where they are configured.
+              onNotifications: () => AppNav.openMedications(context),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -132,6 +218,9 @@ class _ShareView extends StatelessWidget {
                             const SizedBox(height: 24),
                             QuickShareCard(
                               busy: busy,
+                              code: state.status == ShareStatus.ready
+                                  ? state.code
+                                  : null,
                               onShowQr: () => _generate(context),
                             ),
                             const SizedBox(height: 24),
@@ -145,12 +234,18 @@ class _ShareView extends StatelessWidget {
                               durations: ShareCubit.durations,
                               onDurationChanged: cubit.setDuration,
                               onSendLink: () => _generate(context),
-                              onOpenSettings: () {},
+                              onOpenSettings: _openAccessSettings,
                             ),
                             const SizedBox(height: 24),
-                            ExportOptionsCard(onDownloadPdf: () {}),
+                            ExportOptionsCard(
+                              busy: _exporting,
+                              onDownloadPdf: _exportPdf,
+                            ),
                             const SizedBox(height: 24),
-                            _ActiveShares(uid: uid),
+                            _ActiveShares(
+                              uid: uid,
+                              onSeeAll: () => _openHistory(uid),
+                            ),
                           ],
                         );
                       },
@@ -168,9 +263,10 @@ class _ShareView extends StatelessWidget {
 
 /// Streams the patient's real grants and filters to the active ones.
 class _ActiveShares extends StatelessWidget {
-  const _ActiveShares({required this.uid});
+  const _ActiveShares({required this.uid, required this.onSeeAll});
 
   final String uid;
+  final VoidCallback onSeeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -182,10 +278,123 @@ class _ActiveShares extends StatelessWidget {
             (snapshot.data ?? const []).where((g) => g.isActive).toList();
         return ActiveSharesList(
           shares: active,
-          onSeeAll: () {},
+          onSeeAll: onSeeAll,
           onRevoke: (g) => repo.revoke(uid, g.id),
         );
       },
+    );
+  }
+}
+
+/// Explains what the access controls actually do, and offers the one action
+/// that is not expressible through them: revoking everything at once.
+class _AccessSettingsSheet extends StatelessWidget {
+  const _AccessSettingsSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'How sharing works',
+              style: GoogleFonts.hankenGrotesk(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const _SettingsPoint(
+              icon: Icons.tune,
+              title: 'You choose what is included',
+              body: 'Only the categories you tick are written into the code. '
+                  'Nothing else leaves your phone.',
+            ),
+            const _SettingsPoint(
+              icon: Icons.timer_outlined,
+              title: 'The code expires',
+              body: 'The expiry is written inside the code itself, so a '
+                  'recipient app refuses it even with no network.',
+            ),
+            const _SettingsPoint(
+              icon: Icons.lock_outline,
+              title: 'A PIN unlocks it',
+              body: 'The records are encrypted with the PIN you read aloud. '
+                  'Without that PIN the code is unreadable.',
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: () => Navigator.of(context).pop(true),
+                icon: const Icon(Icons.block, size: 18),
+                label: const Text('Revoke all active shares'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.danger,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsPoint extends StatelessWidget {
+  const _SettingsPoint({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: AppColors.indigoFinal),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.hankenGrotesk(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  body,
+                  style: GoogleFonts.hankenGrotesk(
+                    fontSize: 13,
+                    height: 19 / 13,
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

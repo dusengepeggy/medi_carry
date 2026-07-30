@@ -7,9 +7,12 @@ import '../../../core/theme/app_colors.dart';
 
 /// "Export History" slate card from the Share Records (Final) design.
 class ExportOptionsCard extends StatelessWidget {
-  const ExportOptionsCard({super.key, this.onDownloadPdf});
+  const ExportOptionsCard({super.key, this.onDownloadPdf, this.busy = false});
 
   final VoidCallback? onDownloadPdf;
+
+  /// True while the PDF is being generated.
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -86,9 +89,11 @@ class ExportOptionsCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: TextButton(
-                      onPressed: onDownloadPdf,
+                      onPressed: busy ? null : onDownloadPdf,
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.white,
+                        disabledBackgroundColor:
+                            Colors.white.withValues(alpha: 0.7),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 12,
@@ -97,25 +102,35 @@ class ExportOptionsCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            AppAssets.download,
-                            width: 9.333,
-                            height: 9.333,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Download PDF',
-                            style: GoogleFonts.hankenGrotesk(
-                              fontSize: 16,
-                              height: 24 / 16,
-                              color: AppColors.slate,
+                      child: busy
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation(AppColors.slate),
+                              ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SvgPicture.asset(
+                                  AppAssets.download,
+                                  width: 9.333,
+                                  height: 9.333,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Download PDF',
+                                  style: GoogleFonts.hankenGrotesk(
+                                    fontSize: 16,
+                                    height: 24 / 16,
+                                    color: AppColors.slate,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],

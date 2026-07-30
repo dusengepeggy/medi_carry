@@ -12,7 +12,10 @@ class MedicationCard extends StatelessWidget {
     required this.name,
     required this.dosage,
     required this.dueLabel,
+    this.scheduleLabel,
+    this.takenLabel,
     this.onMarkTaken,
+    this.onManage,
   });
 
   /// e.g. "Lisinopril".
@@ -21,13 +24,33 @@ class MedicationCard extends StatelessWidget {
   /// e.g. "10mg - Take with food".
   final String dosage;
 
-  /// e.g. "In 2 hours".
+  /// e.g. "In 2h 14m". Counts down live.
   final String dueLabel;
+
+  /// What follows this dose, e.g. "Then 2:00 PM · 8:00 PM". Null when the
+  /// course has nothing else scheduled.
+  final String? scheduleLabel;
+
+  /// e.g. "Taken 9:04 AM" — shown once today's dose has been marked, so the
+  /// card confirms the action instead of silently moving on.
+  final String? takenLabel;
 
   final VoidCallback? onMarkTaken;
 
+  /// Opens the full regimen. The card shows one dose; without this the rest of
+  /// the schedule — and the reminder switches — had no route from the
+  /// dashboard once a medication existed.
+  final VoidCallback? onManage;
+
   @override
   Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onManage,
+      child: _card(context),
+    );
+  }
+
+  Widget _card(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
@@ -106,6 +129,14 @@ class MedicationCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (onManage != null) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.limeOnSurface.withValues(alpha: 0.7),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 32), // 16 gap + 16 top margin
@@ -129,6 +160,49 @@ class MedicationCard extends StatelessWidget {
               color: AppColors.limeOnSurface.withValues(alpha: 0.8),
             ),
           ),
+          if (takenLabel != null || scheduleLabel != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (takenLabel != null) ...[
+                  Icon(
+                    Icons.check_circle,
+                    size: 15,
+                    color: AppColors.limeOnSurface.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    takenLabel!,
+                    style: GoogleFonts.hankenGrotesk(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.limeOnSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  if (scheduleLabel != null)
+                    Text(
+                      '  ·  ',
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 13,
+                        color: AppColors.limeOnSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                ],
+                if (scheduleLabel != null)
+                  Expanded(
+                    child: Text(
+                      scheduleLabel!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 13,
+                        color: AppColors.limeOnSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
